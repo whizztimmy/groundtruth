@@ -1,0 +1,332 @@
+{
+  "summary": {
+    "from": "2026-10-27T00:00:00+01:00",
+    "to": "2026-10-27T23:59:59+01:00",
+    "total_tracked_s": 28800,
+    "groups": [
+      {
+        "key": "doomscrolling",
+        "duration_s": 9060,
+        "share": 0.3146
+      },
+      {
+        "key": "deep work",
+        "duration_s": 6000,
+        "share": 0.2083
+      },
+      {
+        "key": "research",
+        "duration_s": 4140,
+        "share": 0.1437
+      },
+      {
+        "key": "communication",
+        "duration_s": 1740,
+        "share": 0.0604
+      },
+      {
+        "key": "uncertain",
+        "duration_s": 1680,
+        "share": 0.0583
+      },
+      {
+        "key": "devotion",
+        "duration_s": 1500,
+        "share": 0.0521
+      },
+      {
+        "key": "idle",
+        "duration_s": 1380,
+        "share": 0.0479
+      },
+      {
+        "key": "learning",
+        "duration_s": 1200,
+        "share": 0.0417
+      },
+      {
+        "key": "shallow work",
+        "duration_s": 900,
+        "share": 0.0313
+      },
+      {
+        "key": "entertainment",
+        "duration_s": 780,
+        "share": 0.0271
+      },
+      {
+        "key": "admin",
+        "duration_s": 420,
+        "share": 0.0146
+      }
+    ],
+    "naive_by_process": [
+      {
+        "key": "chrome.exe",
+        "duration_s": 15120,
+        "share": 0.525
+      },
+      {
+        "key": "Code.exe",
+        "duration_s": 8760,
+        "share": 0.3042
+      },
+      {
+        "key": "Instagram.exe",
+        "duration_s": 1860,
+        "share": 0.0646
+      },
+      {
+        "key": "Teams.exe",
+        "duration_s": 1080,
+        "share": 0.0375
+      },
+      {
+        "key": "explorer.exe",
+        "duration_s": 900,
+        "share": 0.0313
+      },
+      {
+        "key": "outlook.exe",
+        "duration_s": 660,
+        "share": 0.0229
+      },
+      {
+        "key": "WindowsTerminal.exe",
+        "duration_s": 420,
+        "share": 0.0146
+      }
+    ]
+  },
+  "sessions": [
+    {
+      "id": "s_01JB001SESS",
+      "start_ts": "2026-10-27T08:40:00+01:00",
+      "end_ts": "2026-10-27T09:05:00+01:00",
+      "device_id": "desk-win-01",
+      "category": "devotion",
+      "label": "morning scripture reading",
+      "confidence": 0.91,
+      "event_count": 7,
+      "duration_s": 1500,
+      "evidence_summary": "A single passage held in one content region for the whole span; near-zero churn and no scroll velocity."
+    },
+    {
+      "id": "s_01JB002SESS",
+      "start_ts": "2026-10-27T09:05:00+01:00",
+      "end_ts": "2026-10-27T09:16:00+01:00",
+      "device_id": "desk-win-01",
+      "category": "communication",
+      "label": "triaging overnight mail",
+      "confidence": 0.94,
+      "event_count": 4,
+      "duration_s": 660,
+      "evidence_summary": "Message list and reading pane alternating focus; short dwell per item, consistent with triage rather than composition."
+    },
+    {
+      "id": "s_01JB003SESS",
+      "start_ts": "2026-10-27T09:16:00+01:00",
+      "end_ts": "2026-10-27T09:57:00+01:00",
+      "device_id": "desk-win-01",
+      "category": "research",
+      "label": "reading Muse Glimmer API documentation",
+      "confidence": 0.89,
+      "event_count": 15,
+      "duration_s": 2460,
+      "evidence_summary": "Static documentation pages across three tabs, code samples visible, low region churn throughout."
+    },
+    {
+      "id": "s_01JB004SESS",
+      "start_ts": "2026-10-27T09:57:00+01:00",
+      "end_ts": "2026-10-27T10:12:00+01:00",
+      "device_id": "desk-win-01",
+      "category": "shallow work",
+      "label": "tidying branches and stale files",
+      "confidence": 0.81,
+      "event_count": 4,
+      "duration_s": 900,
+      "evidence_summary": "Editor focused but no sustained edit region; file tree and terminal taking turns in short bursts."
+    },
+    {
+      "id": "s_01JB005SESS",
+      "start_ts": "2026-10-27T10:12:00+01:00",
+      "end_ts": "2026-10-27T11:12:00+01:00",
+      "device_id": "desk-win-01",
+      "category": "deep work",
+      "label": "auth refactor — token rotation",
+      "confidence": 0.95,
+      "event_count": 20,
+      "duration_s": 3600,
+      "evidence_summary": "One editor region held focus for the full hour with steady keystroke cadence and no feed region on screen."
+    },
+    {
+      "id": "s_01JB006SESS",
+      "start_ts": "2026-10-27T11:12:00+01:00",
+      "end_ts": "2026-10-27T11:23:00+01:00",
+      "device_id": "desk-win-01",
+      "category": "idle",
+      "label": "machine awake, no input",
+      "confidence": 0.97,
+      "event_count": 5,
+      "duration_s": 660,
+      "evidence_summary": "Frame unchanged between samples and no input events; foreground window never lost focus."
+    },
+    {
+      "id": "s_01JB007SESS",
+      "start_ts": "2026-10-27T11:23:00+01:00",
+      "end_ts": "2026-10-27T11:41:00+01:00",
+      "device_id": "desk-win-01",
+      "category": "communication",
+      "label": "stand-up call",
+      "confidence": 0.93,
+      "event_count": 5,
+      "duration_s": 1080,
+      "evidence_summary": "Video tiles tracked as persistent regions with a shared-screen region appearing midway; no text entry."
+    },
+    {
+      "id": "s_01JB008SESS",
+      "start_ts": "2026-10-27T11:56:00+01:00",
+      "end_ts": "2026-10-27T12:37:00+01:00",
+      "device_id": "desk-win-01",
+      "category": "doomscrolling",
+      "label": "scrolling a social feed",
+      "confidence": 0.92,
+      "event_count": 15,
+      "duration_s": 2460,
+      "evidence_summary": "High churn in a fixed-width content column for 41 minutes; view replaced continuously with no dwell."
+    },
+    {
+      "id": "s_01JB009SESS",
+      "start_ts": "2026-10-27T12:37:00+01:00",
+      "end_ts": "2026-10-27T12:49:00+01:00",
+      "device_id": "desk-win-01",
+      "category": "idle",
+      "label": "away from desk",
+      "confidence": 0.96,
+      "event_count": 3,
+      "duration_s": 720,
+      "evidence_summary": "No input and no region change across twelve consecutive samples while a browser window held focus."
+    },
+    {
+      "id": "s_01JB010SESS",
+      "start_ts": "2026-10-27T12:49:00+01:00",
+      "end_ts": "2026-10-27T12:56:00+01:00",
+      "device_id": "desk-win-01",
+      "category": "admin",
+      "label": "expense receipts",
+      "confidence": 0.84,
+      "event_count": 2,
+      "duration_s": 420,
+      "evidence_summary": "Form regions with short-lived input focus and a repeated upload dialog; no reading dwell."
+    },
+    {
+      "id": "s_01JB011SESS",
+      "start_ts": "2026-10-27T12:56:00+01:00",
+      "end_ts": "2026-10-27T13:36:00+01:00",
+      "device_id": "desk-win-01",
+      "category": "deep work",
+      "label": "auth refactor — second pass",
+      "confidence": 0.93,
+      "event_count": 14,
+      "duration_s": 2400,
+      "evidence_summary": "Same editor region as the morning span, diff view opened twice, terminal used for targeted test runs."
+    },
+    {
+      "id": "s_01JB012SESS",
+      "start_ts": "2026-10-27T13:43:00+01:00",
+      "end_ts": "2026-10-27T14:11:00+01:00",
+      "device_id": "desk-win-01",
+      "category": "research",
+      "label": "comparing inference providers",
+      "confidence": 0.86,
+      "event_count": 9,
+      "duration_s": 1680,
+      "evidence_summary": "Two pricing pages and a benchmark table held side by side; repeated back-and-forth between fixed regions."
+    },
+    {
+      "id": "s_01JB013SESS",
+      "start_ts": "2026-10-27T14:11:00+01:00",
+      "end_ts": "2026-10-27T15:30:00+01:00",
+      "device_id": "desk-win-01",
+      "category": "doomscrolling",
+      "label": "scrolling a video feed",
+      "confidence": 0.9,
+      "event_count": 27,
+      "duration_s": 4740,
+      "evidence_summary": "Autoplaying player region replaced every few seconds for 79 minutes; churn sustained, no pause or seek."
+    },
+    {
+      "id": "s_01JB014SESS",
+      "start_ts": "2026-10-27T15:30:00+01:00",
+      "end_ts": "2026-10-27T16:01:00+01:00",
+      "device_id": "desk-win-01",
+      "category": "doomscrolling",
+      "label": "scrolling a photo feed",
+      "confidence": 0.88,
+      "event_count": 9,
+      "duration_s": 1860,
+      "evidence_summary": "Fixed-aspect media regions cycling under continuous scroll; no comment entry and no profile dwell."
+    },
+    {
+      "id": "s_01JB015SESS",
+      "start_ts": "2026-10-27T16:01:00+01:00",
+      "end_ts": "2026-10-27T16:21:00+01:00",
+      "device_id": "desk-win-01",
+      "category": "learning",
+      "label": "working through a SAM 3.1 notebook",
+      "confidence": 0.87,
+      "event_count": 7,
+      "duration_s": 1200,
+      "evidence_summary": "Notebook cells executed top to bottom with output regions read between runs; progression, not revision."
+    },
+    {
+      "id": "s_01JB016SESS",
+      "start_ts": "2026-10-27T16:21:00+01:00",
+      "end_ts": "2026-10-27T16:34:00+01:00",
+      "device_id": "desk-win-01",
+      "category": "entertainment",
+      "label": "watching a series episode",
+      "confidence": 0.9,
+      "event_count": 5,
+      "duration_s": 780,
+      "evidence_summary": "One full-width player region held for the whole span with no scrolling and a single deliberate seek."
+    }
+  ],
+  "uncertain": {
+    "spans": [
+      {
+        "id": "u_01JB001UNCR",
+        "start_ts": "2026-10-27T11:41:00+01:00",
+        "end_ts": "2026-10-27T11:56:00+01:00",
+        "process": "explorer.exe",
+        "evidence": "File manager held over a downloads folder; no content region kept focus long enough to read.",
+        "suggestions": [
+          "admin",
+          "research"
+        ]
+      },
+      {
+        "id": "u_01JB002UNCR",
+        "start_ts": "2026-10-27T13:36:00+01:00",
+        "end_ts": "2026-10-27T13:43:00+01:00",
+        "process": "WindowsTerminal.exe",
+        "evidence": "A long-running build scrolled output continuously while no input arrived — churn reads like a feed.",
+        "suggestions": [
+          "deep work",
+          "shallow work"
+        ]
+      },
+      {
+        "id": "u_01JB003UNCR",
+        "start_ts": "2026-10-27T16:34:00+01:00",
+        "end_ts": "2026-10-27T16:40:00+01:00",
+        "process": "chrome.exe",
+        "evidence": "Mixed content: a documentation tab and a feed tab alternated faster than the sampler could attribute.",
+        "suggestions": [
+          "research",
+          "doomscrolling"
+        ]
+      }
+    ]
+  }
+}

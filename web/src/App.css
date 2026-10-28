@@ -1,0 +1,57 @@
+.state {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding-block: clamp(60px, 14vh, 140px);
+  text-align: center;
+}
+
+.state__title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.state__text {
+  font-size: 13.5px;
+  color: var(--ink-muted);
+}
+
+/* Three bars settling to different lengths: the loading state is a small version
+   of what the dashboard is about, rather than a generic spinner. */
+.state__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  block-size: 26px;
+}
+
+.state__bars span {
+  inline-size: 7px;
+  border-radius: 2px;
+  background: var(--naive-mark);
+  animation: state-settle 1.25s var(--ease) infinite;
+}
+
+.state__bars span:nth-child(1) { animation-delay: 0ms; }
+.state__bars span:nth-child(2) { animation-delay: 110ms; }
+.state__bars span:nth-child(3) { animation-delay: 220ms; }
+
+@keyframes state-settle {
+  0%, 100% { block-size: 30%; background: var(--naive-mark); }
+  50% { block-size: 100%; background: var(--accent); }
+}
+
+.state__retry {
+  margin-block-start: 6px;
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.state__retry:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-2);
+}
