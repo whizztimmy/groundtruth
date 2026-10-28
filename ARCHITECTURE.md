@@ -70,8 +70,16 @@ single screenshot contains:
   area; reading produces low churn. Only visible in motion, never in a single frame.
 - **Attention locus** — which region co-occurs with input events.
 
-Churn-over-time is why this is a video problem rather than a screenshot-classification
-problem. But it is necessary, not sufficient.
+Churn covers what a still frame cannot reach. Testing against a real endpoint
+([validation log](validation.md)) showed that a single screenshot is often *enough* — a
+social feed and a long-form article were separated correctly from one frame each, by
+layout and content rather than by domain. So churn is not the primary discriminator it
+was first assumed to be.
+
+Its role is the residue, and the residue is where trackers fail: the same page read
+versus scrolled, a feed and an article on one domain, a terminal scrolling its own
+output. Those cases are invisible to any single frame, which is why this remains a video
+problem even though most samples resolve without motion.
 
 ### Churn is half the signal
 
