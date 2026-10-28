@@ -88,14 +88,44 @@ def test_unusable_title_escalates(title):
 
 
 def test_low_confidence_history_escalates():
+    """A known process still escalates once its labels stop being trustworthy.
+
+    Uses a recognised process deliberately: an unknown one would trip the
+    not-recognised rule first and this would pass without testing anything.
+    """
     state = EscalationState()
     state.last_any_tier2_at = T0 - timedelta(minutes=5)
-    state.record_tier2("someapp.exe", T0 - timedelta(minutes=5), confident=False)
-    state.record_tier2("someapp.exe", T0 - timedelta(minutes=4), confident=False)
+    state.record_tier2("spotify.exe", T0 - timedelta(minutes=5), confident=False)
+    state.record_tier2("spotify.exe", T0 - timedelta(minutes=4), confident=False)
 
-    d = should_escalate(obs("someapp.exe"), state)
+    d = should_escalate(obs("spotify.exe"), state)
     assert d.escalate
     assert "low-confidence" in d.reason
+
+
+def test_unrecognised_process_escalates():
+    """The gap that a live run exposed: a process Tier 1 cannot label must escalate.
+
+    Before this rule the policy said "tier 1 sufficient" for any unrecognised process
+    while Tier 1 had no label to give, so those samples were dropped silently and the
+    day came back empty.
+    """
+    state = EscalationState()
+    state.last_any_tier2_at = T0 - timedelta(minutes=5)
+    d = should_escalate(obs("some-unknown-app.exe"), state)
+    assert d.escalate
+    assert "not recognised" in d.reason
+
+
+def test_known_process_still_resolves_free():
+    """The counterpart: recognised processes must not start escalating.
+
+    If this fails, every sample costs a model call and the cost model in
+    ARCHITECTURE.md is wrong.
+    """
+    state = EscalationState()
+    state.last_any_tier2_at = T0 - timedelta(minutes=5)
+    assert not should_escalate(obs("spotify.exe"), state)
 
 
 def test_decision_is_truthy():

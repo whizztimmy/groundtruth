@@ -15,6 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
+from .known import is_known
 from .types import Observation
 
 AMBIGUOUS_PROCESSES: frozenset[str] = frozenset(
@@ -148,6 +149,12 @@ def should_escalate(
 
     if obs.is_ambiguous_by_title:
         return Decision(True, "unusable window title")
+
+    if not is_known(process):
+        # Tier 1 can only resolve a process whose name describes the activity. An
+        # unrecognised process has no Tier 1 label at all, so declining to escalate here
+        # would drop the sample silently rather than resolve it cheaply.
+        return Decision(True, "process not recognised by the tier 1 labeller")
 
     if state.low_confidence_streak.get(process, 0) >= 2:
         return Decision(True, "process has a history of low-confidence labels")
