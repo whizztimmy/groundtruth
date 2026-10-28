@@ -67,6 +67,15 @@ class Observation:
     window_title: str | None = None
     regions: tuple[Region, ...] = ()
     transcript: str | None = None
+    input_active: bool | None = None
+    """Whether input arrived since the previous sample.
+
+    Captured on every sample, including Tier 1 ones that never reach a model, because it
+    is only meaningful as a run. Paired with region churn it separates a feed being
+    pulled past from a build log scrolling itself — see `perceive/motion.py`.
+
+    None means the platform could not report it, which is distinct from False.
+    """
 
     @property
     def is_ambiguous_by_title(self) -> bool:

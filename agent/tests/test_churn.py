@@ -6,15 +6,7 @@ extra steps. These tests encode what that separation has to look like.
 
 import pytest
 
-from groundtruth.perceive.churn import (
-    ACTIVE,
-    STATIC,
-    as_mask,
-    churn,
-    describe,
-    is_scrolling,
-    sustained_focus,
-)
+from groundtruth.perceive.churn import ACTIVE, STATIC, as_mask, churn, describe
 
 
 def block(x0: int, y0: int, x1: int, y1: int):
@@ -78,37 +70,5 @@ class TestBands:
         assert STATIC < ACTIVE
 
 
-class TestScrollDetection:
-    def test_single_spike_is_not_scrolling(self):
-        """Tab switches and notifications spike churn once. That is not scrolling.
-
-        This is the test that stops the product accusing someone of doomscrolling
-        because they scrolled once to reach a paragraph.
-        """
-        assert not is_scrolling([0.0, 0.0, 0.95])
-
-    def test_sustained_churn_is_scrolling(self):
-        assert is_scrolling([0.8, 0.9, 0.85])
-
-    def test_too_few_samples_refuses_to_decide(self):
-        assert not is_scrolling([0.9, 0.9])
-
-    def test_majority_rules(self):
-        assert is_scrolling([0.9, 0.1, 0.9])
-        assert not is_scrolling([0.1, 0.9, 0.1])
-
-    def test_reading_is_sustained_focus(self):
-        assert sustained_focus([0.02, 0.05, 0.01])
-
-    def test_one_interruption_breaks_focus(self):
-        assert not sustained_focus([0.02, 0.9, 0.01])
-
-    def test_middle_band_is_neither(self):
-        """The ambiguous band must escalate to the model, not be guessed at.
-
-        If this ever passes as one or the other, a threshold has quietly become a
-        classifier and the honesty of the uncertain label is gone.
-        """
-        middling = [0.35, 0.4, 0.38]
-        assert not is_scrolling(middling)
-        assert not sustained_focus(middling)
+# Interpreting runs of churn values lives in test_motion.py: it needs an input signal
+# alongside, because churn alone cannot tell a feed from a build log scrolling itself.

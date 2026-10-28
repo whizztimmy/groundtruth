@@ -39,7 +39,7 @@ class Collect:
 @pytest.fixture
 def desktop(monkeypatch):
     """A fake foreground window under test control."""
-    state = {"process": "chrome.exe", "title": "a page", "idle": False}
+    state = {"process": "chrome.exe", "title": "a page", "idle_s": 0.0}
 
     def foreground() -> Observation:
         return Observation(
@@ -50,9 +50,7 @@ def desktop(monkeypatch):
         )
 
     monkeypatch.setattr("groundtruth.main.window.foreground", foreground)
-    monkeypatch.setattr(
-        "groundtruth.main.window.is_idle", lambda threshold: state["idle"]
-    )
+    monkeypatch.setattr("groundtruth.main.window.idle_seconds", lambda: state["idle_s"])
     return state
 
 
@@ -122,7 +120,7 @@ async def test_no_label_yet_emits_nothing(config, desktop):
 
 
 async def test_idle_is_emitted_as_a_category(config, desktop):
-    desktop["idle"] = True
+    desktop["idle_s"] = config.idle_threshold_s + 1
     sink = Collect()
     agent = Agent(config, StubClassifier(), sink=sink)
 
@@ -156,3 +154,42 @@ async def test_a_failing_sample_does_not_kill_the_loop(config, desktop, monkeypa
     await task
 
     assert calls["n"] > 1, "loop should have kept sampling after the failure"
+
+
+async def test_input_is_recorded_on_every_sample(config, desktop):
+    """Input history must accumulate on Tier 1 samples too.
+
+    The motion model reads a *run* of input, so collecting it only when a frame is
+    classified would leave the churn half with nothing to pair against.
+    """
+    desktop["process"] = "spotify.exe"  # resolves at tier 1, never reaches a model
+    agent = Agent(config, StubClassifier(), sink=Collect())
+
+    desktop["idle_s"] = 0.0
+    await agent._tick()
+    desktop["idle_s"] = 60.0
+    await agent._tick()
+
+    assert agent._input_history == [True, False]
+
+
+async def test_input_history_is_bounded(config, desktop):
+    """A burst of typing ten minutes ago must not colour what is on screen now."""
+    desktop["process"] = "spotify.exe"
+    agent = Agent(config, StubClassifier(), sink=Collect())
+
+    for _ in range(40):
+        await agent._tick()
+
+    assert len(agent._input_history) <= 16
+
+
+async def test_observation_carries_the_input_flag(config, desktop):
+    desktop["process"] = "someapp.exe"
+    sink = Collect()
+    agent = Agent(config, StubClassifier(), sink=sink)
+
+    desktop["idle_s"] = 0.0
+    await agent._tick()
+
+    assert sink.events[0].tier == Tier.SCREEN

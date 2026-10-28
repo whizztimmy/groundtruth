@@ -7,9 +7,11 @@ reading from scrolling — the pixels look alike. The difference is in the motio
 - **Reading** holds content still. The region's mask is stable frame to frame.
 - **Scrolling** replaces content continuously. The mask churns inside a fixed area.
 
-So churn is a scalar in [0, 1] over a *pair* of frames for the same tracked region, and
-it is the signal that makes "doomscrolling" separable from "research" rather than a guess
-based on which domain was loaded.
+So churn is a scalar in [0, 1] over a *pair* of frames for the same tracked region.
+
+It is necessary but not sufficient. Churn says *that* the screen changed, never *who*
+changed it — a build log scrolling its own output is indistinguishable here from a feed
+being pulled past. `motion.py` pairs this with an input signal to separate them.
 
 Deliberately pure and numpy-free at the boundary: masks come in as sets of coordinates,
 so the policy can be tested without a GPU, a screen, or SAM.
@@ -73,33 +75,7 @@ def describe(value: float) -> str:
     return "shifting"
 
 
-def is_scrolling(values: list[float], *, min_samples: int = 3) -> bool:
-    """Whether a run of churn values looks like scrolling rather than a one-off change.
-
-    A single high reading means nothing — switching tabs, a video frame advancing, or a
-    notification sliding in all spike churn once. Scrolling is *sustained*, so this needs
-    a majority of recent samples to be active before it will say so.
-
-    Requiring `min_samples` is what stops a tracker from accusing someone of
-    doomscrolling because they scrolled once to reach a paragraph.
-    """
-    if len(values) < min_samples:
-        return False
-
-    recent = values[-min_samples:]
-    active = sum(1 for v in recent if v >= ACTIVE)
-    return active > len(recent) / 2
-
-
-def sustained_focus(values: list[float], *, min_samples: int = 3) -> bool:
-    """Whether a run of churn values looks like held attention.
-
-    Not simply the negation of `is_scrolling`: the middle band is genuinely ambiguous,
-    and a region that is neither static nor churning should escalate to the model rather
-    than be assigned a label by a threshold. Honest uncertainty beats a confident guess.
-    """
-    if len(values) < min_samples:
-        return False
-
-    recent = values[-min_samples:]
-    return all(v <= STATIC for v in recent)
+# Interpreting a run of churn values lives in `motion.py`, not here, and deliberately
+# requires an input signal alongside it. Churn on its own cannot tell a social feed from
+# a build log scrolling its own output — both churn hard, and only one of them has a
+# person driving it. This module measures; motion.py interprets.

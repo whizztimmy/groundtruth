@@ -17,6 +17,7 @@ import asyncio
 import logging
 import signal
 from collections.abc import Awaitable, Callable
+from dataclasses import replace
 from datetime import datetime, timezone
 from typing import Protocol
 
@@ -29,6 +30,13 @@ from .sync import SyncClient
 from .types import Classification, Event, Observation, Tier
 
 log = logging.getLogger("groundtruth")
+
+_INPUT_HISTORY = 16
+"""Samples of input history to retain — roughly half a minute at the default cadence.
+
+Long enough for `motion.classify` to see a run, short enough that a burst of typing ten
+minutes ago does not colour what is on screen now.
+"""
 
 IDLE = Classification(
     label="idle",
@@ -108,6 +116,14 @@ class Agent:
         self._grab_frame = grab_frame
         self._state = EscalationState()
         self._stopping = asyncio.Event()
+        self._input_history: list[bool] = []
+        """Recent per-sample input flags, newest last.
+
+        Half of the motion model in `perceive/motion.py`. The churn half arrives with
+        Tier 2 region tracking; collecting this continuously means that when a frame is
+        finally classified, the run of input leading up to it is already known rather
+        than having to be reconstructed.
+        """
         self._last: dict[str, Classification] = {}
         """Most recent Tier 2 label per process, carried forward between classifications.
 
@@ -153,13 +169,22 @@ class Agent:
         log.info("agent stopped")
 
     async def _tick(self) -> None:
-        if window.is_idle(self._config.idle_threshold_s):
+        idle_s = window.idle_seconds()
+        if idle_s >= self._config.idle_threshold_s:
             await self._emit(
                 Observation(ts=_now(), tier=Tier.WINDOW), IDLE, Tier.WINDOW
             )
             return
 
-        obs = window.foreground()
+        # Recorded on every sample, including Tier 1 ones that never reach a model: the
+        # signal is only meaningful as a run, so it has to be collected continuously
+        # rather than fetched at classification time.
+        had_input = idle_s < self._config.sample_interval_s
+        self._input_history.append(had_input)
+        if len(self._input_history) > _INPUT_HISTORY:
+            self._input_history.pop(0)
+
+        obs = replace(window.foreground(), input_active=had_input)
         decision = should_escalate(obs, self._state)
         log.debug("tier1 %s -> %s (%s)", obs.process, decision.escalate, decision.reason)
 
