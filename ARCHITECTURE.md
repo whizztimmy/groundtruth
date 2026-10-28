@@ -67,12 +67,36 @@ single screenshot contains:
 
 - **Region persistence** — how long a region stayed on screen.
 - **Region churn** — a feed scrolling produces high mask instability in a fixed bounding
-  area; reading produces low churn. This is the strongest single discriminator between
-  reading and scrolling, and it is only visible in motion.
+  area; reading produces low churn. Only visible in motion, never in a single frame.
 - **Attention locus** — which region co-occurs with input events.
 
-Churn-over-time is the measurement that makes "doomscrolling" and "reading" separable, and
-it is why this is a video problem rather than a screenshot-classification problem.
+Churn-over-time is why this is a video problem rather than a screenshot-classification
+problem. But it is necessary, not sufficient.
+
+### Churn is half the signal
+
+Churn says *that* the screen changed. It can never say *who* changed it — and a fixture
+day caught the consequence: a long-running build scrolls its own output continuously with
+nobody at the keyboard, producing exactly the instability that defines a social feed.
+Churn alone would file a compiling project as doomscrolling.
+
+Input rate answers the second question, and costs nothing: `GetLastInputInfo` is already
+sampled for idle detection. Pairing them gives four quadrants rather than one axis:
+
+|                     | little input | steady input |
+|---------------------|--------------|--------------|
+| **churning screen** | `playing` — build log, video, slideshow | `scrolling` — a feed being pulled past |
+| **static screen**   | `reading` — held content | `working` — editing, composing |
+
+The diagonal is the point. `scrolling` and `playing` are indistinguishable to churn;
+`reading` and `working` are indistinguishable to input rate. Neither signal alone
+separates all four, which is why `perceive/churn.py` only measures and
+`perceive/motion.py` interprets.
+
+Motion is a **prior handed to the classifier, never a label shown to a user** — a terminal
+can scroll and still be work. The evidence strings describe what was observed and contain
+no verdict, so the model weighs the observation rather than being steered by it. A run
+that is thin or sits between the bands returns `unclear` and escalates.
 
 ## Verification rather than accuracy
 
