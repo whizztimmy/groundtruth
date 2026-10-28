@@ -28,9 +28,16 @@ The most sensitive data a person has is their own screen. A tracker that underst
 screen is only acceptable if that understanding never leaves your machine.
 
 So GroundTruth runs **Muse Glimmer** — Meta's Apache-2.0, 30B, always-on local agent
-model — as its classifier. Your screen content is perceived locally and discarded; only
-derived labels are ever persisted or synced. The model comes to your data instead of your
-data going to a model.
+model — as its classifier. Frames are perceived and discarded; only derived labels are
+ever persisted or synced. The model comes to your data instead of your data going to a
+model.
+
+Because the weights are open, that holds whether Glimmer runs on your own GPU or on
+infrastructure you rent and control — it is the same model either way, and moving it
+on-device is a config change. What it never runs on is a vendor-managed endpoint that
+could retain your screen. The agent enforces this rather than promising it: sending a
+frame to a managed backend raises instead of succeeding, and a misconfigured backend
+defaults to refusing. See [Placement](ARCHITECTURE.md#placement).
 
 That is not a feature bolted onto a time tracker. It is the entire thesis, and it is a
 working implementation of the argument in *The Future Is for Everyone*: superintelligence
