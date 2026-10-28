@@ -19,13 +19,16 @@ import signal
 from collections.abc import Awaitable, Callable
 from dataclasses import replace
 from datetime import datetime, timezone
-from typing import Protocol
+from typing import Any, Protocol
 
 from . import known
 from .buffer import EventBuffer
 from .capture import window
 from .capture.screen import TARGET_WIDTH, FrameGrabber
 from .capture.window import CaptureUnavailable
+from .backends import Backend, BackendError
+from .perceive.classify import Classifier
+from .perceive.regions import RegionTracker
 from .config import Config
 from .escalate import EscalationState, should_escalate
 from .sync import SyncClient
@@ -61,7 +64,11 @@ class SupportsClassify(Protocol):
     """
 
     async def classify_verified(
-        self, obs: Observation, frame: object
+        self,
+        obs: Observation,
+        frame: object,
+        *,
+        input_history: list[bool] | None = None,
     ) -> Classification: ...
 
 
@@ -84,7 +91,11 @@ class StubClassifier:
     }
 
     async def classify_verified(
-        self, obs: Observation, frame: object
+        self,
+        obs: Observation,
+        frame: object,
+        *,
+        input_history: list[bool] | None = None,
     ) -> Classification:
         category, evidence = self.MAPPING.get(
             (obs.process or "").lower(),
@@ -111,11 +122,13 @@ class Agent:
         *,
         sink: Callable[[Event], Awaitable[None]],
         grab_frame: Callable[[], object] | None = None,
+        tracker: Any | None = None,
     ) -> None:
         self._config = config
         self._classifier = classifier
         self._sink = sink
         self._grab_frame = grab_frame
+        self._tracker = tracker
         self._state = EscalationState()
         self._stopping = asyncio.Event()
         self._input_history: list[bool] = []
@@ -219,7 +232,19 @@ class Agent:
             return
 
         frame = self._grab_frame() if self._grab_frame else None
-        classification = await self._classifier.classify_verified(obs, frame)
+
+        if frame is not None and self._tracker is not None:
+            try:
+                obs = replace(obs, regions=await self._tracker.track(frame))
+            except Exception:
+                # Segmentation is an enrichment, not a prerequisite. Losing it costs the
+                # classifier its churn evidence, which is worse than having it and far
+                # better than dropping the sample.
+                log.warning("region tracking failed; classifying without regions")
+
+        classification = await self._classifier.classify_verified(
+            obs, frame, input_history=list(self._input_history)
+        )
         # Dropped immediately; nothing downstream receives the frame.
         del frame
 
@@ -327,11 +352,26 @@ async def _main() -> None:
             c.confidence,
         )
 
+    classifier: SupportsClassify = StubClassifier()
+    tracker = None
+    if grabber is not None:
+        try:
+            classifier = Classifier(Backend.from_env("GLIMMER"))
+            tracker = RegionTracker(Backend.from_env("SAM"))
+            log.info("tier 2 classifier and region tracker ready")
+        except BackendError as exc:
+            # Falling back to the stub keeps the loop observable while inference is
+            # being provisioned. It is logged loudly because the stub reproduces the
+            # app-name heuristic this project exists to replace - useful for a demo of
+            # the problem, never to be mistaken for the product working.
+            log.warning("tier 2 models unavailable (%s); using the stub classifier", exc)
+
     agent = Agent(
         config,
-        StubClassifier(),
+        classifier,
         sink=buffering_sink,
         grab_frame=grabber.grab_active if grabber else None,
+        tracker=tracker,
     )
 
     loop = asyncio.get_running_loop()
