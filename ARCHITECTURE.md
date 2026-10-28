@@ -5,8 +5,10 @@
 These drove every decision below. They are listed first because most of the design is a
 consequence of them.
 
-1. **Screen content must never leave the device.** This rules out a remote multimodal API
-   for the hot path and forces local inference for anything that sees pixels.
+1. **Screen content must never reach a party who can retain it.** This rules out a
+   vendor-managed multimodal API for the hot path. It does not rule out open weights
+   running on infrastructure the operator controls — see *Placement* below, where this
+   distinction is drawn precisely and enforced in code.
 2. **Always-on means cost-per-hour, not cost-per-call.** A classifier that runs every few
    seconds for sixteen hours a day cannot cost a cent per invocation.
 3. **The ground truth is unobservable.** Nobody logs what they were "really" doing, so
@@ -89,6 +91,34 @@ can be held to:
 This is the difference between an agent that acts and an agent that *verifies it acted
 correctly*, applied to perception rather than to tool calls.
 
+## Placement
+
+"Local" is the goal, but stating it as an absolute would be dishonest about how this
+actually runs, so the architecture names three placements and enforces the distinction
+between them:
+
+| Placement | Meaning | May see pixels |
+|-----------|---------|----------------|
+| `local` | On the user's machine | Yes |
+| `self_hosted` | Open weights on infrastructure the operator controls and can tear down | Yes |
+| `managed` | A vendor-managed endpoint | **No** |
+
+The meaningful line is not on-device versus off-device — it is whether the operator
+controls the weights and the machine. Glimmer is Apache-2.0, so a `self_hosted`
+deployment is the *same model* the user could run on their own GPU; moving it on-device is
+a config change, not a port. A `managed` endpoint is a different proposition: the operator
+controls neither retention nor what the content is subsequently used for.
+
+That last point is not hypothetical. Meta's own API states that while free credits are in
+use, "your content may be used for product improvement" — which is entirely reasonable for
+text, and exactly why frames never go there.
+
+Enforcement lives in `agent/groundtruth/backends.py`. `vision()` raises
+`PlacementViolation` rather than sending a frame to a `managed` backend, and an unset
+placement defaults to `managed`, so forgetting to configure one costs a refused call
+instead of a silent leak. A privacy guarantee that depends on every future caller
+remembering it is not a guarantee.
+
 ## Privacy model
 
 What is held, and for how long:
@@ -154,4 +184,5 @@ Stated so the boundary is explicit rather than discovered:
 - No productivity scoring. The system reports what happened; it does not grade it.
 - No blocking or intervention in v1. Measurement must be trustworthy before it earns the
   right to act.
-- No cloud-hosted screen understanding, ever, on any tier.
+- No `managed` screen understanding, ever, on any tier. Frames go to `local` or
+  `self_hosted` placements or nowhere.
