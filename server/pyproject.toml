@@ -1,0 +1,29 @@
+[project]
+name = "groundtruth-server"
+version = "0.1.0"
+description = "Sync server and session segmenter for GroundTruth"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.7",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.2", "httpx>=0.27", "ruff>=0.5"]
+
+[project.scripts]
+groundtruth-load-fixtures = "groundtruth_server.fixtures:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["groundtruth_server"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
