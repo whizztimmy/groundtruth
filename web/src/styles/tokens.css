@@ -1,0 +1,187 @@
+/*
+ * GroundTruth design tokens.
+ *
+ * Every colour in the dashboard resolves to a custom property declared here.
+ * Components never carry a literal colour: the three views share one palette, so
+ * a category is the same colour in the contrast view, the timeline and the
+ * uncertain queue without any of them knowing about the others.
+ *
+ * Dark and light are both *selected*, not derived. The dark steps are the same
+ * eight hues re-stepped for the dark surface rather than an algorithmic flip,
+ * because an automatic inversion lands outside the usable lightness band.
+ *
+ * The category palette was validated with the data-viz palette checker in both
+ * modes (OKLab ΔE ×100, Machado-Oliveira-Fernandes CVD simulation at severity 1.0):
+ *
+ *            adjacent pairs          all pairs
+ *   light    CVD 14.0 / normal 18.0  CVD 8.3 / normal 15.3
+ *   dark     CVD 13.8 / normal 16.0  CVD 6.9 / normal 15.3
+ *
+ * Bars and timeline segments are an adjacent-pair form, which both modes clear
+ * outright. Timeline adjacency is data-driven rather than legend-driven, so the
+ * all-pairs figures matter too: normal-vision clears the >=15 floor in both modes,
+ * and dark all-pairs CVD sits in the 6-8 band that is legal only with secondary
+ * encoding. Every category mark in this UI therefore carries a text label, a
+ * legend entry and a 2px surface gap — never colour alone.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* --- surfaces ------------------------------------------------------- */
+  --surface-page: #f4f4f2;
+  --surface-1: #fcfcfb;
+  --surface-2: #ffffff;
+  --surface-sunken: #eeeeec;
+
+  /* --- ink ------------------------------------------------------------ */
+  --ink-primary: #15171b;
+  --ink-secondary: #4c525b;
+  --ink-muted: #6d747e;
+  --ink-inverse: #fcfcfb;
+
+  /* --- lines ---------------------------------------------------------- */
+  --line-strong: #d3d4d1;
+  --line: #e2e3e0;
+  --line-faint: #ebebe8;
+
+  /* --- accent (UI chrome, never a category) --------------------------- */
+  --accent: #2f6f5e;
+  --accent-ink: #ffffff;
+  --accent-soft: #e4efeb;
+
+  /* --- category palette ----------------------------------------------- */
+  /* Eight hues in a fixed order, assigned by meaning: cool for intentional
+     attention, warm for consumed attention, violet and rose for the personal
+     categories. Never cycled, never generated — a category the server invents
+     beyond this set falls back to --cat-other. */
+  --cat-deep-work: #3a70aa;
+  --cat-research: #50bfbe;
+  --cat-learning: #4f8751;
+  --cat-devotion: #9a88cf;
+  --cat-communication: #a94082;
+  --cat-shallow-work: #ba8e17;
+  --cat-entertainment: #9e420b;
+  --cat-doomscrolling: #ed8b8b;
+
+  /* Deliberately neutral: overhead, absence, and the honest "no answer".
+     GroundTruth does not grade time, so doomscrolling is not red-alert and
+     idle is not a failure — idle simply recedes toward the surface. */
+  --cat-admin: #6a717c;
+  --cat-idle: #a7adb6;
+  --cat-uncertain: #8a9098;
+  --cat-other: #7c828b;
+
+  /* The naive column has no semantic information to encode, so it gets none.
+     Process rows are rendered in a single neutral on purpose — that absence of
+     colour is the argument the contrast view is making. */
+  --naive-mark: #9ba1a9;
+  --naive-mark-strong: #767c85;
+
+  /* --- shadow --------------------------------------------------------- */
+  --shadow-1: 0 1px 2px rgb(16 18 21 / 6%), 0 1px 1px rgb(16 18 21 / 4%);
+  --shadow-2: 0 4px 16px rgb(16 18 21 / 8%), 0 1px 3px rgb(16 18 21 / 6%);
+  --shadow-pop: 0 10px 30px rgb(16 18 21 / 14%), 0 2px 6px rgb(16 18 21 / 8%);
+
+  /* --- geometry & motion ---------------------------------------------- */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-pill: 999px;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur-fast: 140ms;
+  --dur: 260ms;
+  --dur-slow: 620ms;
+}
+
+/* Dark values are declared under both scopes: the media query follows the OS
+   setting, the [data-theme] scope follows an explicit choice and must win either
+   way. The :not() guard lets a light stamp beat OS-dark; :where() keeps the media
+   block's specificity below the explicit scope. */
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+
+    --surface-page: #101215;
+    --surface-1: #16181b;
+    --surface-2: #1d2024;
+    --surface-sunken: #0b0d0f;
+
+    --ink-primary: #eceef1;
+    --ink-secondary: #a9afb9;
+    --ink-muted: #7d848e;
+    --ink-inverse: #16181b;
+
+    --line-strong: #363a40;
+    --line: #272b30;
+    --line-faint: #1f2227;
+
+    --accent: #5fbba1;
+    --accent-ink: #0d1412;
+    --accent-soft: #19241f;
+
+    --cat-deep-work: #4071a7;
+    --cat-research: #11aaaa;
+    --cat-learning: #2f8838;
+    --cat-devotion: #9b85d7;
+    --cat-communication: #ad4185;
+    --cat-shallow-work: #bb8d07;
+    --cat-entertainment: #934319;
+    --cat-doomscrolling: #e16b6f;
+
+    --cat-admin: #8b939f;
+    --cat-idle: #5c636d;
+    --cat-uncertain: #79818c;
+    --cat-other: #868d97;
+
+    --naive-mark: #4e555e;
+    --naive-mark-strong: #767d87;
+
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 40%);
+    --shadow-2: 0 4px 16px rgb(0 0 0 / 46%), 0 1px 3px rgb(0 0 0 / 34%);
+    --shadow-pop: 0 12px 34px rgb(0 0 0 / 58%), 0 2px 6px rgb(0 0 0 / 40%);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --surface-page: #101215;
+  --surface-1: #16181b;
+  --surface-2: #1d2024;
+  --surface-sunken: #0b0d0f;
+
+  --ink-primary: #eceef1;
+  --ink-secondary: #a9afb9;
+  --ink-muted: #7d848e;
+  --ink-inverse: #16181b;
+
+  --line-strong: #363a40;
+  --line: #272b30;
+  --line-faint: #1f2227;
+
+  --accent: #5fbba1;
+  --accent-ink: #0d1412;
+  --accent-soft: #19241f;
+
+  --cat-deep-work: #4071a7;
+  --cat-research: #11aaaa;
+  --cat-learning: #2f8838;
+  --cat-devotion: #9b85d7;
+  --cat-communication: #ad4185;
+  --cat-shallow-work: #bb8d07;
+  --cat-entertainment: #934319;
+  --cat-doomscrolling: #e16b6f;
+
+  --cat-admin: #8b939f;
+  --cat-idle: #5c636d;
+  --cat-uncertain: #79818c;
+  --cat-other: #868d97;
+
+  --naive-mark: #4e555e;
+  --naive-mark-strong: #767d87;
+
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-2: 0 4px 16px rgb(0 0 0 / 46%), 0 1px 3px rgb(0 0 0 / 34%);
+  --shadow-pop: 0 12px 34px rgb(0 0 0 / 58%), 0 2px 6px rgb(0 0 0 / 40%);
+}

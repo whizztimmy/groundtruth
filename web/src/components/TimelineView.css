@@ -1,0 +1,373 @@
+.tl {
+  padding-block-start: clamp(20px, 3vw, 34px);
+}
+
+.tl__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-block-end: 18px;
+}
+
+.tl__title {
+  font-size: clamp(21px, 2.2vw, 27px);
+  letter-spacing: -0.02em;
+}
+
+.tl__sub {
+  margin-block-start: 3px;
+  font-size: 13.5px;
+  color: var(--ink-secondary);
+}
+
+.tl__offset,
+.tl__hint {
+  color: var(--ink-muted);
+}
+
+.tl__hint {
+  flex: none;
+  font-size: 12.5px;
+}
+
+.tl__card {
+  padding: clamp(16px, 2vw, 24px) clamp(16px, 2vw, 26px) 14px;
+  box-shadow: var(--shadow-2);
+}
+
+/* Desktop is the priority but the day must stay readable on a phone: below the
+   min-width the lane scrolls horizontally instead of compressing to illegibility. */
+/* Deliberately not a scroll container on desktop. `overflow-x: auto` forces the
+   block axis to clip too, which would cut off the hover card above the lane; at
+   this width the lane already fits, so nothing needs to scroll. Narrow screens
+   turn scrolling back on below, where hover is not the primary interaction. */
+.tl__scroll {
+  overflow: visible;
+}
+
+.tl__inner {
+  position: relative;
+  min-inline-size: 760px;
+}
+
+/* --- ruler ------------------------------------------------------------- */
+
+.tl__ruler {
+  position: relative;
+  block-size: 18px;
+}
+
+.tl__tick {
+  position: absolute;
+  top: 0;
+  display: grid;
+  justify-items: start;
+}
+
+.tl__tickLabel {
+  font-size: 11px;
+  color: var(--ink-muted);
+  transform: translateX(-1px);
+  white-space: nowrap;
+}
+
+/* --- session lane ------------------------------------------------------ */
+
+.tl__lane {
+  position: relative;
+  block-size: 104px;
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.tl__grid {
+  position: absolute;
+  inset-block: 0;
+  inline-size: 1px;
+  background: var(--line);
+  opacity: 0.75;
+}
+
+.tl__block {
+  position: absolute;
+  inset-block: 0;
+  /* The 2px surface gap between neighbouring fills, drawn without touching width. */
+  box-shadow: inset -2px 0 0 0 var(--surface-1);
+  background: var(--block-color);
+  text-align: start;
+  overflow: hidden;
+  transition: filter var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+
+.tl__block:hover,
+.tl__block--active {
+  filter: saturate(1.08) brightness(1.06);
+  /* A 2px surface ring on the active mark, so the hovered block reads as lifted
+     rather than merely recoloured. */
+  box-shadow: inset 0 0 0 2px var(--surface-1), inset -2px 0 0 0 var(--surface-1);
+}
+
+/* The label rides on a surface chip rather than directly on the fill. Text on a
+   saturated mark cannot be guaranteed legible in both modes — some category steps
+   are too light for white and too dark for black — so the chip restores a known
+   surface and the label keeps the ordinary ink token on top of it. */
+.tl__blockLabel {
+  display: block;
+  max-inline-size: calc(100% - 14px);
+  margin: 8px 7px;
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  background: color-mix(in oklab, var(--surface-1) 88%, transparent);
+  font-size: 11.5px;
+  font-weight: 560;
+  line-height: 1.3;
+  color: var(--ink-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- uncertain lane ---------------------------------------------------- */
+
+.tl__uncertainLane {
+  position: relative;
+  block-size: 22px;
+  margin-block-start: 4px;
+  border-radius: var(--r-sm);
+  background: var(--surface-sunken);
+}
+
+.tl__laneTag {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  padding-inline-start: 2px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  pointer-events: none;
+}
+
+.tl__uncertain {
+  position: absolute;
+  inset-block: 0;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px var(--cat-uncertain);
+  transition: box-shadow var(--dur-fast) var(--ease);
+}
+
+.tl__uncertain:hover,
+.tl__uncertain--active {
+  box-shadow: inset 0 0 0 2px var(--ink-secondary);
+}
+
+/* --- tooltip ----------------------------------------------------------- */
+
+/* Anchored below the lane rather than above it. Above, the card would need ~200px
+   of clear space that the sticky header occupies; below, it drops into the legend
+   row, which is static reference the reader is not using mid-hover. */
+.tlTip {
+  position: absolute;
+  top: calc(100% + 10px);
+  transform: translateX(-50%);
+  z-index: 15;
+  inline-size: 302px;
+  padding: 11px 13px 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-pop);
+  pointer-events: none;
+}
+
+.tlTip__top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-block-end: 6px;
+}
+
+.tlTip__cat {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.tlTip__dur {
+  font-size: 12.5px;
+  font-weight: 640;
+}
+
+.tlTip__label {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+
+.tlTip__range {
+  margin-block-start: 2px;
+  font-size: 11.5px;
+  color: var(--ink-muted);
+}
+
+.tlTip__evidence {
+  margin-block-start: 8px;
+  padding-block-start: 8px;
+  border-block-start: 1px solid var(--line);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-secondary);
+}
+
+.tlTip__conf {
+  margin-block-start: 10px;
+}
+
+.tlTip__foot {
+  margin-block-start: 8px;
+  font-size: 11.5px;
+  color: var(--ink-muted);
+}
+
+/* --- legend ------------------------------------------------------------ */
+
+.tlLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  list-style: none;
+  padding: 0;
+  margin-block-start: 16px;
+  padding-block-start: 14px;
+  border-block-start: 1px solid var(--line);
+}
+
+.tlLegend__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.tlLegend__key {
+  color: var(--ink-secondary);
+}
+
+.tlLegend__dur {
+  color: var(--ink-muted);
+}
+
+/* --- table ------------------------------------------------------------- */
+
+.tlTable {
+  margin-block-start: clamp(14px, 1.8vw, 20px);
+  overflow: hidden;
+}
+
+.tlTable__summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px clamp(14px, 1.8vw, 20px);
+  font-size: 13.5px;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.tlTable__summary::marker,
+.tlTable__summary::-webkit-details-marker {
+  color: var(--ink-muted);
+}
+
+.tlTable__summaryHint {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+.tlTable__scroll {
+  overflow-x: auto;
+  border-block-start: 1px solid var(--line);
+}
+
+.tlTable__table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.tlTable__table th {
+  position: sticky;
+  top: 0;
+  padding: 9px 12px;
+  background: var(--surface-1);
+  border-block-end: 1px solid var(--line);
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  text-align: start;
+  white-space: nowrap;
+}
+
+.tlTable__table td {
+  padding: 9px 12px;
+  border-block-end: 1px solid var(--line-faint);
+  vertical-align: top;
+  color: var(--ink-secondary);
+}
+
+.tlTable__table tbody tr:last-child td {
+  border-block-end: 0;
+}
+
+.tlTable__table tbody tr:hover td {
+  background: color-mix(in oklab, var(--surface-sunken) 55%, transparent);
+}
+
+.tlTable__time,
+.tlTable__table td:nth-child(2) {
+  white-space: nowrap;
+}
+
+.tlTable__cat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  color: var(--ink-primary);
+}
+
+.tlTable__evidence {
+  min-inline-size: 280px;
+  line-height: 1.45;
+}
+
+@media (max-width: 900px) {
+  .tl__scroll {
+    overflow-x: auto;
+    padding-block-start: 150px;
+    margin-block-start: -150px;
+  }
+}
+
+@media (max-width: 860px) {
+  .tl__head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tl__hint {
+    display: none;
+  }
+}

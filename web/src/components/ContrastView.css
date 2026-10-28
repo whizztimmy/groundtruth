@@ -1,0 +1,278 @@
+.contrast {
+  padding-block-start: clamp(20px, 3vw, 34px);
+}
+
+/* --- header ------------------------------------------------------------ */
+
+.contrast__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-block-end: 18px;
+}
+
+.contrast__day {
+  font-size: clamp(21px, 2.2vw, 27px);
+  letter-spacing: -0.02em;
+}
+
+.contrast__sub {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-block-start: 3px;
+  font-size: 13.5px;
+  color: var(--ink-secondary);
+}
+
+.contrast__bullet {
+  inline-size: 3px;
+  block-size: 3px;
+  border-radius: 50%;
+  background: var(--ink-muted);
+  opacity: 0.7;
+}
+
+.contrast__offset {
+  color: var(--ink-muted);
+}
+
+.contrast__replay {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  padding: 7px 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--ink-secondary);
+  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+}
+
+.contrast__replay:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-2);
+  color: var(--ink-primary);
+}
+
+.contrast__replayIcon {
+  inline-size: 14px;
+  block-size: 14px;
+}
+
+/* --- hero -------------------------------------------------------------- */
+
+.contrast__hero {
+  padding: clamp(18px, 2.4vw, 28px) clamp(18px, 2.4vw, 30px) clamp(14px, 2vw, 22px);
+  box-shadow: var(--shadow-2);
+}
+
+.contrast__rowHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-block-end: 11px;
+}
+
+.eyebrow--accent {
+  color: var(--accent);
+}
+
+.contrast__rowMeta {
+  font-size: 12px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+/* The pivot is the sentence that licenses the comparison: it states that the two
+   bars are the same window, so the reader does not have to assume it. */
+.contrast__pivot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-block: 20px 22px;
+}
+
+.contrast__pivotLine {
+  flex: 1;
+  block-size: 1px;
+  background: linear-gradient(to right, transparent, var(--line-strong), transparent);
+}
+
+.contrast__pivotText {
+  flex: none;
+  font-size: 12px;
+  color: var(--ink-muted);
+  letter-spacing: 0.005em;
+}
+
+/* --- ranked columns ---------------------------------------------------- */
+
+.contrast__cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(14px, 1.6vw, 22px);
+  margin-block-start: clamp(16px, 2vw, 24px);
+  align-items: start;
+}
+
+.ranked {
+  padding: 16px clamp(14px, 1.6vw, 20px) 10px;
+  min-inline-size: 0;
+}
+
+.ranked__head {
+  margin-block-end: 12px;
+}
+
+.ranked__title {
+  font-size: 14.5px;
+}
+
+.ranked__note {
+  margin-block-start: 1px;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+
+.ranked__list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.ranked__row {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto 40px;
+  grid-template-areas:
+    "swatch key dur pct"
+    ".      track track track";
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 5px;
+  padding-block: 8px;
+  border-block-end: 1px solid var(--line-faint);
+}
+
+.ranked__row:last-child {
+  border-block-end: 0;
+}
+
+.ranked__row > .swatch {
+  grid-area: swatch;
+}
+
+.ranked__key {
+  grid-area: key;
+  min-inline-size: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 550;
+  overflow: hidden;
+}
+
+.ranked__gloss {
+  flex: 1;
+  min-inline-size: 0;
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ranked__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, var(--accent) 40%, transparent);
+  text-underline-offset: 3px;
+}
+
+.ranked__link:hover {
+  text-decoration-color: var(--accent);
+}
+
+.ranked__linkArrow {
+  font-size: 11px;
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.ranked__link:hover .ranked__linkArrow {
+  transform: translateX(2px);
+}
+
+.ranked__dur {
+  grid-area: dur;
+  font-size: 13.5px;
+  font-weight: 620;
+  letter-spacing: -0.01em;
+}
+
+.ranked__pct {
+  grid-area: pct;
+  font-size: 12px;
+  color: var(--ink-muted);
+  text-align: end;
+}
+
+.ranked__track {
+  grid-area: track;
+  block-size: 6px;
+  border-radius: var(--r-pill);
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.ranked__fill {
+  display: block;
+  block-size: 100%;
+  /* 4px rounded data-end, anchored to the baseline at the start of the track. */
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  transition: width var(--dur-slow) var(--ease);
+}
+
+/* --- narrow ------------------------------------------------------------ */
+
+@media (max-width: 860px) {
+  .contrast__cols {
+    grid-template-columns: 1fr;
+  }
+
+  .contrast__head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .contrast__pivotText {
+    font-size: 11px;
+  }
+
+  /* The row meta is nowrap so it never splits mid-figure on desktop; at phone
+     width it needs to wrap under the eyebrow instead of running to the edge. */
+  .contrast__rowHead {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  .contrast__rowMeta {
+    white-space: normal;
+  }
+
+  .ranked__gloss {
+    display: none;
+  }
+}

@@ -1,0 +1,97 @@
+.stack {
+  --stack-height: 46px;
+  --gap: 2px;
+}
+
+.stack__track {
+  position: relative;
+  block-size: var(--stack-height);
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.stack__seg {
+  position: absolute;
+  inset-block: 0;
+  /* Before the reveal every slice is the same neutral and the dividers are closed,
+     so the bar reads as one undifferentiated block of time. */
+  background: var(--naive-mark);
+  transition:
+    background-color var(--dur-slow) var(--ease),
+    box-shadow var(--dur-slow) var(--ease);
+}
+
+/* The 2px surface gap between fills is drawn as an inset shadow so opening it
+   costs no layout and the slices keep their exact widths. */
+.stack__track--revealed .stack__seg {
+  background: var(--seg-color);
+  box-shadow: inset calc(-1 * var(--gap)) 0 0 0 var(--surface-1);
+}
+
+.stack__track--revealed .stack__seg:last-child {
+  box-shadow: none;
+}
+
+.stack__seg--textured {
+  background-image: repeating-linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--surface-1) 55%, transparent) 0 3px,
+    transparent 3px 7px
+  );
+}
+
+/* --- direct labels ----------------------------------------------------- */
+
+.stack__labels {
+  position: relative;
+  block-size: 34px;
+  margin-block-start: 8px;
+}
+
+.stack__label {
+  position: absolute;
+  top: 0;
+  display: grid;
+  gap: 1px;
+  white-space: nowrap;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.stack__label--mid {
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.stack__label--end {
+  text-align: end;
+}
+
+.stack__labelKey {
+  font-size: 12.5px;
+  font-weight: 550;
+  color: var(--ink-secondary);
+  line-height: 1.2;
+}
+
+.stack__labelDur {
+  font-size: 15px;
+  font-weight: 620;
+  color: var(--ink-primary);
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+@media (max-width: 700px) {
+  .stack {
+    --stack-height: 36px;
+  }
+
+  .stack__labelDur {
+    font-size: 13px;
+  }
+
+  .stack__labelKey {
+    font-size: 11px;
+  }
+}
