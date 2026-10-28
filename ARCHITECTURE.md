@@ -150,13 +150,31 @@ What is held, and for how long:
 | Data | Lifetime | Leaves device |
 |------|----------|---------------|
 | Raw screen frames | In memory, discarded after classification | Never |
+| Downscaled frame (1024px) | In memory, for the duration of one inference | Only to a `local` or `self_hosted` backend |
 | SAM 3.1 masks | In memory, discarded after feature extraction | Never |
 | Derived region features (churn, persistence) | Discarded after classification | Never |
 | Activity label + confidence + timestamps | Persisted | Only on explicit sync |
 | Voice audio | Discarded after transcription | Never |
 
-No frame is ever written to disk. The agent holds a single frame buffer and overwrites it.
-This is enforced at the capture boundary rather than by convention.
+No frame is ever written to disk. This is enforced at the capture boundary rather than by
+convention, and `test_capture_writes_nothing_to_disk` checks it.
+
+Three further controls sit in `capture/screen.py`:
+
+**Tier 2 opts in, never out.** Unset `TIER2_ENABLED` and the agent captures no frames at
+all, running Tier 1 only. A misconfigured agent should see less than intended, never more.
+The grabber is not even constructed unless a backend is allowed to look at pixels —
+capturing a screen that nothing will examine is precisely the thing this project exists
+not to do.
+
+**Only the active display.** A second monitor is captured only when the foreground window
+is on it. Grabbing every screen is easier and doubles the exposure for no gain.
+
+**Downscaled to 1024px before leaving the module.** This is a privacy control as much as a
+cost one. At that width the *structure* of a screen survives — pane layout, where a feed
+sits, whether a video is playing — which is what SAM 3.1 segments and what the motion
+model reads. Fine body text largely does not, which is the point: the classifier should be
+reading the shape of a screen, not someone's correspondence.
 
 ## Data model
 

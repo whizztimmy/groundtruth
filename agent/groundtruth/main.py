@@ -24,6 +24,8 @@ from typing import Protocol
 from . import known
 from .buffer import EventBuffer
 from .capture import window
+from .capture.screen import TARGET_WIDTH, FrameGrabber
+from .capture.window import CaptureUnavailable
 from .config import Config
 from .escalate import EscalationState, should_escalate
 from .sync import SyncClient
@@ -290,6 +292,19 @@ async def _main() -> None:
 
     buffer = EventBuffer(config.buffer_path)
     buffer.prune(config.buffer_max_rows)
+
+    # Only constructed when a backend is actually allowed to see pixels. Without one,
+    # the agent runs Tier 1 only rather than grabbing frames nothing will look at —
+    # capturing a screen for no reason is the thing this project exists not to do.
+    grabber: FrameGrabber | None = None
+    if config.tier2_enabled:
+        try:
+            grabber = FrameGrabber()
+            log.info("tier 2 enabled; frames reduced to %dpx wide", TARGET_WIDTH)
+        except CaptureUnavailable as exc:
+            log.warning("tier 2 unavailable (%s); running tier 1 only", exc)
+    else:
+        log.info("tier 2 disabled; no frames will be captured")
     sync = SyncClient(
         server_url=config.server_url,
         device_id=config.device_id,
@@ -312,7 +327,12 @@ async def _main() -> None:
             c.confidence,
         )
 
-    agent = Agent(config, StubClassifier(), sink=buffering_sink)
+    agent = Agent(
+        config,
+        StubClassifier(),
+        sink=buffering_sink,
+        grab_frame=grabber.grab_active if grabber else None,
+    )
 
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):
@@ -337,6 +357,8 @@ async def _main() -> None:
         except Exception:
             log.debug("final flush failed; events remain buffered for next start")
         await sync.aclose()
+        if grabber is not None:
+            grabber.close()
         log.info("%d events buffered at exit", buffer.count())
         buffer.close()
 

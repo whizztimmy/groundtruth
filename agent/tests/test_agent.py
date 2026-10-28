@@ -25,6 +25,7 @@ def config(tmp_path):
         buffer_path=tmp_path / "events.db",
         sync_titles="none",
         buffer_max_rows=1000,
+        tier2_enabled=False,
     )
 
 

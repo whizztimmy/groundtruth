@@ -56,6 +56,7 @@ class Config:
     buffer_path: Path
     sync_titles: str
     buffer_max_rows: int
+    tier2_enabled: bool
 
     @classmethod
     def from_env(cls) -> Config:
@@ -94,4 +95,9 @@ class Config:
             # Roughly two weeks of continuous capture at the default cadence. A safety
             # valve against an indefinitely offline device filling its disk.
             buffer_max_rows=int(_env_float("BUFFER_MAX_ROWS", 500_000)),
+            # Off unless asked for. Tier 2 is the only tier that sees pixels, so it
+            # opts in rather than out: a misconfigured agent should capture less
+            # than intended, never more.
+            tier2_enabled=os.environ.get("TIER2_ENABLED", "").strip().lower()
+            in ("1", "true", "yes"),
         )
