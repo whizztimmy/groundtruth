@@ -53,6 +53,9 @@ class Config:
     server_url: str
     sync_batch_size: int
     sync_interval_s: float
+    buffer_path: Path
+    sync_titles: str
+    buffer_max_rows: int
 
     @classmethod
     def from_env(cls) -> Config:
@@ -80,4 +83,15 @@ class Config:
             # and so the agent works offline and catches up.
             sync_batch_size=int(_env_float("SYNC_BATCH_SIZE", 50)),
             sync_interval_s=_env_float("SYNC_INTERVAL_S", 60.0),
+            buffer_path=Path(
+                os.environ.get("BUFFER_PATH")
+                or Path.home() / ".groundtruth" / "events.db"
+            ),
+            # Defaults to sending no titles. See sync.TitlePolicy: a window title is the
+            # most revealing thing the agent sees, and the privacy model promises that
+            # only derived labels are synced.
+            sync_titles=os.environ.get("SYNC_TITLES", "none").strip().lower(),
+            # Roughly two weeks of continuous capture at the default cadence. A safety
+            # valve against an indefinitely offline device filling its disk.
+            buffer_max_rows=int(_env_float("BUFFER_MAX_ROWS", 500_000)),
         )

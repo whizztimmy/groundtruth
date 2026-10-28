@@ -21,9 +21,11 @@ from datetime import datetime, timezone
 from typing import Protocol
 
 from . import known
+from .buffer import EventBuffer
 from .capture import window
 from .config import Config
 from .escalate import EscalationState, should_escalate
+from .sync import SyncClient
 from .types import Classification, Event, Observation, Tier
 
 log = logging.getLogger("groundtruth")
@@ -106,9 +108,27 @@ class Agent:
         self._grab_frame = grab_frame
         self._state = EscalationState()
         self._stopping = asyncio.Event()
+        self._last: dict[str, Classification] = {}
+        """Most recent Tier 2 label per process, carried forward between classifications.
+
+        Tier 2 is rate limited to roughly one call per twenty seconds, so without this a
+        process that only Tier 2 can label produces an event on the sample that
+        classified it and nothing for the next ten samples. The timeline would be a
+        scatter of points rather than a span, and the segmenter would have nothing to
+        merge into a session.
+        """
 
     def stop(self) -> None:
         self._stopping.set()
+
+    @property
+    def stopping(self) -> asyncio.Event:
+        """Set when the agent is shutting down.
+
+        Exposed so sibling tasks — the syncer, chiefly — can wind down on the same
+        signal instead of being cancelled mid-request.
+        """
+        return self._stopping
 
     async def run(self) -> None:
         """Sample until stopped.
@@ -148,9 +168,15 @@ class Agent:
             # cover a day rather than leave gaps wherever the model was not consulted.
             resolved = known.lookup(obs.process)
             if resolved is None:
-                # The policy should have escalated; treating this as a hole rather than
-                # guessing keeps the two components honest about disagreeing.
-                log.warning("no tier 1 label for %s and no escalation", obs.process)
+                carried = self._last.get((obs.process or "").lower())
+                if carried is not None:
+                    await self._emit(obs, _carry(carried), Tier.WINDOW)
+                    return
+                # No Tier 1 label and nothing to carry: the very first samples of an
+                # unrecognised process while Tier 2 is rate limited. A gap is the honest
+                # answer — inventing a label here would be the exact failure the product
+                # exists to correct.
+                log.debug("no label yet for %s; awaiting first classification", obs.process)
                 return
             category, label = resolved
             await self._emit(
@@ -173,6 +199,7 @@ class Agent:
         self._state.record_tier2(
             (obs.process or "").lower(), obs.ts, confident=classification.is_acceptable
         )
+        self._last[(obs.process or "").lower()] = classification
         await self._emit(obs, classification, Tier.SCREEN)
 
     async def _emit(
@@ -190,8 +217,44 @@ class Agent:
         )
 
 
+def _carry(previous: Classification) -> Classification:
+    """Re-assert a previous label for a sample that could not be classified afresh.
+
+    Confidence is deliberately not reduced. The label is as good as it was a few seconds
+    ago, and decaying it would make the dashboard show attention quietly draining away
+    during exactly the stretches where someone was most focused.
+
+    The evidence string says it was carried, so a user asking "why did it say that?"
+    gets an honest answer rather than the impression of a fresh observation.
+    """
+    return Classification(
+        label=previous.label,
+        category=previous.category,
+        confidence=previous.confidence,
+        evidence=f"{previous.evidence} (carried forward; no new classification due)",
+        reasoning_effort=previous.reasoning_effort,
+    )
+
+
 def _now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+async def _sync_forever(client: SyncClient, interval_s: float, stop: asyncio.Event) -> None:
+    """Flush the buffer on an interval until stopped.
+
+    Runs beside the capture loop rather than inside it so a slow or unreachable server
+    can never delay a sample. Capture is the thing that cannot be retried later.
+    """
+    while not stop.is_set():
+        try:
+            await asyncio.wait_for(stop.wait(), timeout=interval_s)
+        except asyncio.TimeoutError:
+            pass
+        try:
+            await client.flush_all()
+        except Exception:
+            log.exception("sync failed; events remain buffered")
 
 
 async def _main() -> None:
@@ -200,18 +263,31 @@ async def _main() -> None:
     )
     config = Config.from_env()
 
-    async def print_sink(event: Event) -> None:
+    buffer = EventBuffer(config.buffer_path)
+    buffer.prune(config.buffer_max_rows)
+    sync = SyncClient(
+        server_url=config.server_url,
+        device_id=config.device_id,
+        buffer=buffer,
+        batch_size=config.sync_batch_size,
+        titles=config.sync_titles,
+    )
+
+    async def buffering_sink(event: Event) -> None:
+        # Durable before anything else. Everything downstream can be retried; an
+        # unobserved minute cannot.
+        buffer.append(event)
         c = event.classification
         log.info(
-            "%s | %-22s | %-14s | %.2f | %s",
+            "%s | tier %d | %-20s | %-14s | %.2f",
             event.ts.strftime("%H:%M:%S"),
+            int(event.tier),
             event.process or "-",
             c.category,
             c.confidence,
-            c.evidence,
         )
 
-    agent = Agent(config, StubClassifier(), sink=print_sink)
+    agent = Agent(config, StubClassifier(), sink=buffering_sink)
 
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):
@@ -222,7 +298,22 @@ async def _main() -> None:
             # propagates instead, which asyncio.run handles.
             pass
 
-    await agent.run()
+    syncer = asyncio.create_task(
+        _sync_forever(sync, config.sync_interval_s, agent.stopping)
+    )
+    try:
+        await agent.run()
+    finally:
+        syncer.cancel()
+        # One last drain so a clean shutdown does not strand a partial batch until the
+        # next launch.
+        try:
+            await sync.flush_all()
+        except Exception:
+            log.debug("final flush failed; events remain buffered for next start")
+        await sync.aclose()
+        log.info("%d events buffered at exit", buffer.count())
+        buffer.close()
 
 
 if __name__ == "__main__":
