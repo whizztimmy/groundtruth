@@ -2,7 +2,8 @@
 
 Run once a key is in `.env`:
 
-    cd agent && ./.venv/Scripts/python.exe check_api.py
+    cd agent && ./.venv/Scripts/python.exe check_api.py            # Meta, tier 4
+    cd agent && ./.venv/Scripts/python.exe check_api.py GLIMMER    # Baseten, tier 2
 
 Answers three questions the mock could not:
 
@@ -41,12 +42,14 @@ async def main() -> None:
     load_env()
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-    if not os.environ.get("META_API_KEY"):
-        sys.exit("META_API_KEY is empty in .env")
+    prefix_key = os.environ.get(f"{prefix}_API_KEY") if (prefix := (sys.argv[1] if len(sys.argv) > 1 else "SPARK")) else None
+    if not (prefix_key or os.environ.get("META_API_KEY")):
+        sys.exit(f"{prefix}_API_KEY and META_API_KEY are both empty in .env")
 
     from groundtruth.backends import Backend, BackendError, chat
 
-    backend = Backend.from_env("SPARK")
+    prefix = sys.argv[1] if len(sys.argv) > 1 else "SPARK"
+    backend = Backend.from_env(prefix)
     print(f"endpoint : {backend.base_url}")
     print(f"model    : {backend.model}")
     print(f"placement: {backend.placement.value}")
