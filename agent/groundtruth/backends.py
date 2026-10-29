@@ -52,6 +52,16 @@ class BackendError(RuntimeError):
     """A call failed in a way retrying will not fix."""
 
 
+class TruncatedBeforeAnswer(BackendError):
+    """A reasoning model spent its whole budget thinking and emitted nothing.
+
+    Distinct from other failures because it is mechanically fixable: the model did not
+    refuse or error, it simply ran out of room. `chat` retries once with a doubled
+    budget rather than making every caller guess a ceiling that depends on how much
+    input they happened to send.
+    """
+
+
 class PlacementViolation(BackendError):
     """Raised when screen content would reach a backend not allowed to see it.
 
@@ -120,6 +130,7 @@ async def chat(
     temperature: float = 0.0,
     max_tokens: int = 512,
     max_attempts: int = 3,
+    max_token_ceiling: int = 16000,
     client: httpx.AsyncClient | None = None,
 ) -> str:
     """Call an OpenAI-compatible chat endpoint and return the assistant's text.
@@ -156,7 +167,17 @@ async def chat(
                 last_error = exc
             else:
                 if response.status_code < 400:
-                    return _extract_text(response.json())
+                    try:
+                        return _extract_text(response.json())
+                    except TruncatedBeforeAnswer:
+                        # How much room a reasoning model needs depends on how much
+                        # input it was given, which the caller cannot know in advance.
+                        # Doubling once covers the realistic case without letting a
+                        # pathological prompt spend without limit.
+                        if payload["max_tokens"] >= max_token_ceiling:
+                            raise
+                        payload["max_tokens"] *= 2
+                        continue
                 if response.status_code not in RETRYABLE_STATUS:
                     raise BackendError(
                         f"{backend.model} returned {response.status_code}: "
@@ -252,7 +273,7 @@ def _extract_text(body: dict[str, Any]) -> str:
     # confusing failure that looks like a broken endpoint rather than a cramped one.
     # Muse Spark Open does exactly this. Say so plainly instead of reporting a type.
     if choice.get("finish_reason") == "length":
-        raise BackendError(
+        raise TruncatedBeforeAnswer(
             f"{backend_name(body)} ran out of tokens before emitting content. "
             "Reasoning models consume the budget thinking first — raise max_tokens, "
             "or lower reasoning effort."

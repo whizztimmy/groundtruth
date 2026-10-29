@@ -44,9 +44,24 @@ Rules you must not break:
 - Never moralise. "You spent 2h 31m on feeds" is a fact; "you wasted 2h 31m" is a \
 judgement you were not asked for. No praise either.
 - An observation must cite the specific figure it rests on, so the person can check it.
-- If the data does not support an observation, say there was nothing notable. An invented \
-pattern is worse than a dull review, because they will act on it.
+- If the data does not support an observation, return an empty list. An invented pattern \
+is worse than an empty review, because they will act on it.
 - Time that could not be classified is not evidence of anything. Do not reason about it.
+
+**Restating one figure is not an observation.** "Deep work was 1h 35m" tells the person \
+something they can already read. An observation relates figures to each other, or to \
+what one would expect:
+
+- a category whose total is large but whose average stretch is short, meaning it never \
+  happened continuously
+- two categories that trade off against each other across days
+- a day that differs from the others
+- what the person's days actually begin with, where that is not what they would guess
+- a longest-focus figure that is small relative to the total in that same category
+
+If none of those hold — and with only a day or two of data, usually none will — return \
+no observations at all. Saying nothing is the correct output for thin data, and padding \
+it with restatement wastes the person's attention and teaches them to ignore you.
 
 Respond with JSON only:
 {"observations": [{"finding": "...", "evidence": "...", "confidence": 0.0}],
@@ -173,7 +188,9 @@ class Reviewer:
         asked: str | None = None
         for _ in range(self._max_followups + 1):
             raw = await chat(
-                self._backend, messages, max_tokens=1200, temperature=0.2
+                # Generous: a reasoning model spends budget thinking before it emits,
+            # and a review that reasons across a week needs room to finish.
+            self._backend, messages, max_tokens=4000, temperature=0.2
             )
             parsed = _parse(raw)
             question = parsed.get("question")

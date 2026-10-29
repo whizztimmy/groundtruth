@@ -74,3 +74,61 @@ assumed: they cover the cases a still frame cannot reach — the same page being
 scrolled, a terminal scrolling its own output, a feed and an article on one domain — rather
 than being the primary discriminator. The tiered escalation already reflects this. The
 claim in `ARCHITECTURE.md` has been narrowed to match.
+
+## 2026-10-29 — First real inference, via Baseten
+
+**Setup.** Muse Spark Open (`meta-models/muse-spark-open-1026`) served by Baseten at
+`inference.baseten.co/v1`. Placement `self_hosted`: open weights on infrastructure the
+operator controls.
+
+### Transport
+
+- **`/chat/completions` works.** Baseten's OpenAI-compatible surface is the one
+  `backends.py` already spoke, so Tier 2 needed configuration and no code.
+- **Inline base64 images work.** No file upload step is required, despite the Meta
+  playground's generated code uploading for a `file_id` first. `vision()` was right.
+
+### Muse Spark Open reasons before it answers
+
+The first call failed with `unexpected content type: NoneType` — an error pointing at the
+parser rather than the cause. The model spends its token budget thinking, so a tight
+`max_tokens` returns null content and `finish_reason: "length"`.
+
+This is not a tuning detail. The classifier shipped with `max_tokens=400`, which on a
+complex screen would have failed as an *uncertain span* rather than a visible error —
+producing a mysteriously useless classifier instead of an obvious fault.
+
+The budget a reasoning model needs scales with input size, which a caller cannot know in
+advance, so `chat` now detects truncation-before-answer and retries once with a doubled
+budget up to a ceiling. A self-describing failure deserves a mechanical fix rather than a
+magic number.
+
+### The review prompt was too strict to say anything
+
+With the transport working, Tier 4 produced this:
+
+> Your period total is recorded as 4h 31m across 3 sessions.
+> For doomscrolling, the recorded time is 2h 31m (56%).
+
+Every rule satisfied, every figure cited, and completely worthless. The constraints
+written to prevent confabulation — *every number is given to you, cite the figure it rests
+on* — left restatement as the only safe move.
+
+The fix was to name the failure: restating one figure is not an observation, and an
+observation must relate figures to each other or to what one would expect. The prompt now
+lists the shapes that qualify, and says that returning nothing is correct for thin data.
+
+**Verified both directions.** On three spans in one day it now returns *"nothing notable
+in this period"*, which is the honest answer. On a synthetic week containing a deliberately
+planted pattern it found it:
+
+> Deep work and doomscrolling trade off across days — higher doomscrolling coincides with
+> lower deep work. (Thursday doomscrolling 2h with deep work 28m ... compared to Monday
+> deep work 1h 50m)
+
+It also found the fragmentation — deep work totalling 6h 26m with a 48m average stretch —
+and that weekdays began with deep work while weekends began with devotion. None of those
+are restatements, and all cite figures that were computed rather than generated.
+
+**Open:** whether a real week of the user's own data yields observations this clean, and
+whether confidence calibration on Tier 2 varies at all. `probe.py` answers the second.
