@@ -16,6 +16,7 @@ import base64
 import io
 import os
 import random
+import re
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
@@ -62,6 +63,21 @@ class TruncatedBeforeAnswer(BackendError):
     """
 
 
+class TrainingTierRefused(BackendError):
+    """Raised when a configured model is a tier the vendor may train on.
+
+    Meta prices `-contributor` checkpoints below the standard ones precisely because
+    inputs may enter a training corpus. That is a reasonable trade for a throwaway
+    script and the wrong one here: Tier 4 is handed a person's categorised week, and the
+    README promises that stays theirs.
+
+    It is refused rather than warned about because the two model ids differ by one
+    suffix, the cheaper one appears in the vendor's own examples, and a warning in a log
+    nobody reads is not a control. `ALLOW_TRAINING_TIER=1` overrides it for anyone who
+    genuinely wants the discount on their own data.
+    """
+
+
 class PlacementViolation(BackendError):
     """Raised when screen content would reach a backend not allowed to see it.
 
@@ -89,6 +105,10 @@ class Backend:
 
         Falls back to `META_API_KEY` when no `{PREFIX}_API_KEY` is set, since most
         deployments use one key across models.
+
+        Fails on a missing key rather than building a backend that will 401 on first use.
+        A remote endpoint with no credential is always a misconfiguration, and finding
+        out at startup beats finding out inside a retry loop at the end of a week.
         """
         endpoint = os.environ.get(f"{prefix}_ENDPOINT")
         model = os.environ.get(f"{prefix}_MODEL")
@@ -104,11 +124,27 @@ class Backend:
                 f"{prefix}_PLACEMENT={raw_placement!r} is not one of: {valid}"
             ) from exc
 
+        if TRAINING_TIER.search(model) and not _flag("ALLOW_TRAINING_TIER"):
+            raise TrainingTierRefused(
+                f"{prefix}_MODEL={model!r} is a contributor-tier checkpoint, which the "
+                "vendor may train on. Use the standard model id, or set "
+                "ALLOW_TRAINING_TIER=1 if that trade is deliberate."
+            )
+
+        api_key = (
+            os.environ.get(f"{prefix}_API_KEY") or os.environ.get("META_API_KEY") or ""
+        ).strip()
+        if not api_key and placement is not Placement.LOCAL:
+            raise BackendError(
+                f"{prefix}_API_KEY is empty and so is META_API_KEY, but "
+                f"{prefix}_ENDPOINT is {placement.value}, not local. Put the key in .env."
+            )
+
         return cls(
             base_url=endpoint.rstrip("/"),
             model=model,
             placement=placement,
-            api_key=os.environ.get(f"{prefix}_API_KEY") or os.environ.get("META_API_KEY"),
+            api_key=api_key or None,
         )
 
     @property
@@ -117,6 +153,16 @@ class Backend:
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
         return headers
+
+
+# Vendor suffixes that mark a discounted tier trained on its inputs. Matched on the
+# model id because that is the only place the distinction appears — the endpoint, the
+# auth and the wire format are identical to the standard tier.
+TRAINING_TIER = re.compile(r"-(?:contributor|training|community)(?![a-z])")
+
+
+def _flag(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 RETRYABLE_STATUS = frozenset({408, 409, 429, 500, 502, 503, 504})

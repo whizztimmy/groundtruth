@@ -12,6 +12,7 @@ from groundtruth.backends import (
     BackendError,
     Placement,
     PlacementViolation,
+    TrainingTierRefused,
     _extract_text,
     vision,
 )
@@ -81,6 +82,10 @@ class TestBackendFromEnv:
         monkeypatch.setenv("GLIMMER_ENDPOINT", "http://127.0.0.1:8080/v1")
         monkeypatch.setenv("GLIMMER_MODEL", "muse-glimmer-30b")
         monkeypatch.delenv("GLIMMER_PLACEMENT", raising=False)
+        # A key, so this test fails only for the reason it is named after. Defaulting to
+        # `managed` also makes a credential mandatory, and without this the assertion
+        # below would be unreachable behind an unrelated error.
+        monkeypatch.setenv("GLIMMER_API_KEY", "k")
         assert Backend.from_env("GLIMMER").placement is Placement.MANAGED
 
     def test_falls_back_to_shared_key(self, monkeypatch):
@@ -91,10 +96,57 @@ class TestBackendFromEnv:
         monkeypatch.setenv("META_API_KEY", "shared-key")
         assert Backend.from_env("GLIMMER").api_key == "shared-key"
 
+    def test_a_remote_backend_without_a_key_is_refused(self, monkeypatch):
+        """Better a clear error at startup than a 401 inside a retry loop on Sunday."""
+        monkeypatch.setenv("GLIMMER_ENDPOINT", "https://api.meta.ai/v1")
+        monkeypatch.setenv("GLIMMER_MODEL", "muse-spark-1.3")
+        monkeypatch.setenv("GLIMMER_PLACEMENT", "managed")
+        monkeypatch.setenv("GLIMMER_API_KEY", "")
+        monkeypatch.setenv("META_API_KEY", "   ")
+        with pytest.raises(BackendError, match="empty"):
+            Backend.from_env("GLIMMER")
+
+    def test_a_local_backend_needs_no_key(self, monkeypatch):
+        """llama.cpp on a laptop has nothing to authenticate against."""
+        monkeypatch.setenv("GLIMMER_ENDPOINT", "http://127.0.0.1:8080/v1")
+        monkeypatch.setenv("GLIMMER_MODEL", "muse-glimmer-30b")
+        monkeypatch.setenv("GLIMMER_PLACEMENT", "local")
+        monkeypatch.delenv("GLIMMER_API_KEY", raising=False)
+        monkeypatch.delenv("META_API_KEY", raising=False)
+        assert Backend.from_env("GLIMMER").api_key is None
+
+    def test_a_contributor_checkpoint_is_refused(self, monkeypatch):
+        """The discount is paid for with the user's week. Not Tier 4's call to make."""
+        monkeypatch.setenv("SPARK_ENDPOINT", "https://api.meta.ai/v1")
+        monkeypatch.setenv("SPARK_MODEL", "muse-spark-1.2-contributor")
+        monkeypatch.setenv("SPARK_PLACEMENT", "managed")
+        monkeypatch.setenv("SPARK_API_KEY", "k")
+        monkeypatch.delenv("ALLOW_TRAINING_TIER", raising=False)
+        with pytest.raises(TrainingTierRefused, match="contributor-tier"):
+            Backend.from_env("SPARK")
+
+    def test_the_training_tier_can_be_chosen_deliberately(self, monkeypatch):
+        """Refusing by default is a guardrail, not a policy someone cannot overrule."""
+        monkeypatch.setenv("SPARK_ENDPOINT", "https://api.meta.ai/v1")
+        monkeypatch.setenv("SPARK_MODEL", "muse-spark-1.2-contributor")
+        monkeypatch.setenv("SPARK_PLACEMENT", "managed")
+        monkeypatch.setenv("SPARK_API_KEY", "k")
+        monkeypatch.setenv("ALLOW_TRAINING_TIER", "1")
+        assert Backend.from_env("SPARK").model == "muse-spark-1.2-contributor"
+
+    def test_the_standard_checkpoint_is_not_mistaken_for_one(self, monkeypatch):
+        """`-contributor` must match a suffix, not any model with a hyphen in it."""
+        monkeypatch.setenv("SPARK_ENDPOINT", "https://api.meta.ai/v1")
+        monkeypatch.setenv("SPARK_MODEL", "muse-spark-1.3")
+        monkeypatch.setenv("SPARK_PLACEMENT", "managed")
+        monkeypatch.setenv("SPARK_API_KEY", "k")
+        assert Backend.from_env("SPARK").model == "muse-spark-1.3"
+
     def test_strips_trailing_slash(self, monkeypatch):
         monkeypatch.setenv("GLIMMER_ENDPOINT", "http://127.0.0.1:8080/v1/")
         monkeypatch.setenv("GLIMMER_MODEL", "m")
         monkeypatch.setenv("GLIMMER_PLACEMENT", "local")
+        monkeypatch.delenv("META_API_KEY", raising=False)
         assert Backend.from_env("GLIMMER").base_url == "http://127.0.0.1:8080/v1"
 
 
