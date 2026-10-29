@@ -357,14 +357,26 @@ async def _main() -> None:
     if grabber is not None:
         try:
             classifier = Classifier(Backend.from_env("GLIMMER"))
-            tracker = RegionTracker(Backend.from_env("SAM"))
-            log.info("tier 2 classifier and region tracker ready")
+            log.info("classifier ready: %s", getattr(classifier, "_backend").model)
         except BackendError as exc:
             # Falling back to the stub keeps the loop observable while inference is
             # being provisioned. It is logged loudly because the stub reproduces the
             # app-name heuristic this project exists to replace - useful for a demo of
             # the problem, never to be mistaken for the product working.
-            log.warning("tier 2 models unavailable (%s); using the stub classifier", exc)
+            log.warning("classifier unavailable (%s); using the stub", exc)
+
+        # Constructed separately, because segmentation is an enrichment everywhere else
+        # in this code and the startup path should not be the one place that treats it
+        # as a prerequisite. Coupling them meant an unset SAM endpoint silently
+        # discarded a working classifier and reverted the agent to app-name labelling.
+        try:
+            tracker = RegionTracker(Backend.from_env("SAM"))
+            log.info("region tracking ready")
+        except BackendError as exc:
+            log.warning(
+                "region tracking unavailable (%s); classifying without churn evidence",
+                exc,
+            )
 
     agent = Agent(
         config,

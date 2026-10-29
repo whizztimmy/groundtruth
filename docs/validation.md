@@ -194,3 +194,56 @@ matter more than they did when they were made: labels carry forward between
 classifications rather than being recomputed every sample, and session confidence is a
 duration-weighted mean rather than a last-value. Both damp this drift. Thresholds should
 not be tuned more finely than 0.1, because that is below the noise floor.
+
+## 2026-10-29 — First live run on a real screen
+
+Agent running with `TIER2_ENABLED=1` against Baseten, 92 seconds, classifying the
+operator's actual desktop. Nine events: four Tier 2 classifications, five Tier 1
+carry-forwards, all buffered.
+
+Region tracking was unavailable — no SAM host yet — so this ran with no churn evidence at
+all, on single frames.
+
+```
+05:02:38 | tier 2 | claude.exe | deep work | 0.87
+05:03:18 | tier 2 | claude.exe | deep work | 0.87
+05:03:39 | tier 2 | claude.exe | deep work | 0.88
+05:03:51 | tier 1 | claude.exe | deep work | 0.88   <- carried forward
+05:03:59 | tier 2 | claude.exe | deep work | 0.88
+```
+
+### The labels
+
+> debugging and validating an AI screen-agent for a hackathon
+
+> developing and debugging an AI agent for a hackathon
+
+> building and testing an AI agent for hackathon
+
+With evidence:
+
+> screen shows Claude reviewing validation.md, calibration results, and a SAM_ENDPOINT
+> wiring fix with a 'Run it live against Baseten' workflow for the GroundTruth dashboard
+> project
+
+This is the claim in `README.md`, met. A conventional tracker would have recorded
+`claude.exe, 92 seconds` — or at best "coding". What it actually recorded was the
+project, the phase of work within it, and the files on screen. The distinction between
+"an editor was focused" and "validating a screen-agent before a deadline" is the entire
+product.
+
+Four independent classifications over ninety seconds produced four consistent labels at
+0.87–0.88, which also bears on the drift noted above: the variance is real but small
+enough that a category does not flip within a stable activity.
+
+### Notes
+
+- The rate limit held: four Tier 2 calls in 92 seconds, with Tier 1 carrying the label
+  between them. The timeline has no gaps.
+- Startup previously coupled classifier and tracker construction, so an unset
+  `SAM_ENDPOINT` discarded a working classifier and silently reverted the agent to
+  app-name labelling — the exact failure the product exists to correct, hidden inside the
+  product. They are now constructed independently.
+- Still open: whether churn evidence improves these labels or merely decorates them. That
+  needs a SAM host, and the abstentions recorded earlier suggest it will matter most on
+  the samples that currently decline to answer.
