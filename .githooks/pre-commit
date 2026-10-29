@@ -1,0 +1,15 @@
+#!/bin/sh
+# Shared hook. Enabled per clone with:
+#   git config core.hooksPath .githooks
+#
+# Committed rather than left in .git/hooks so it travels with the repository; .git/hooks
+# is local-only, which is exactly where a safeguard is least useful.
+
+for py in python3 python py; do
+    if command -v "$py" >/dev/null 2>&1; then
+        exec "$py" scripts/scan_secrets.py
+    fi
+done
+
+echo "secret scan: no python interpreter found; commit allowed" >&2
+exit 0
