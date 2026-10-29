@@ -13,6 +13,12 @@ someone's life silently lost".
 
 Only derived labels are stored here. No frame, mask, or pixel-derived feature is ever
 written to disk anywhere in this project.
+
+Those labels are still text a model wrote while looking at a screen, so `append` is the
+gate where credential-shaped substrings are scrubbed out — see `redact.py`. It is done
+here rather than at the classifier because this is the single point every stored and
+synced string passes through, and a control placed anywhere upstream can be bypassed by
+the next caller that forgets it.
 """
 
 from __future__ import annotations
@@ -22,6 +28,7 @@ from collections.abc import Iterable, Sequence
 from datetime import datetime
 from pathlib import Path
 
+from .redact import scrub_event
 from .types import Classification, Event, Tier
 
 SCHEMA = """
@@ -76,6 +83,7 @@ class EventBuffer:
         legitimately re-observe the same instant after a clock adjustment or a restart
         mid-sample, and that is not an error worth crashing a day's capture over.
         """
+        event = scrub_event(event)
         c = event.classification
         cursor = self._conn.execute(
             """

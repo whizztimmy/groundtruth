@@ -161,11 +161,30 @@ What is held, and for how long:
 | Downscaled frame (1024px) | In memory, for the duration of one inference | Only to a `local` or `self_hosted` backend |
 | SAM 3.1 masks | In memory, discarded after feature extraction | Never |
 | Derived region features (churn, persistence) | Discarded after classification | Never |
-| Activity label + confidence + timestamps | Persisted | Only on explicit sync |
+| Activity label + confidence + timestamps | Persisted, credential-scrubbed | Only on explicit sync |
 | Voice audio | Discarded after transcription | Never |
 
 No frame is ever written to disk. This is enforced at the capture boundary rather than by
 convention, and `test_capture_writes_nothing_to_disk` checks it.
+
+**A description of a frame is not a frame, and that distinction cost us a gap.** The
+invariant above governs pixels, but `label` and `evidence` are strings a model wrote while
+looking at a screen, and both are persisted and synced. The classifier demonstrably
+transcribes what it reads — the validation run of 2026-10-29 has it quoting a billing page
+back verbatim — so a credential visible on screen could have been stored in plain text and
+shipped to the sync server.
+
+`redact.py` closes it. `EventBuffer.append` is the gate: every stored and synced string
+passes through exactly one function, so the control cannot be bypassed by a future caller
+that forgets it, which is the same argument that put the placement check inside `vision()`
+rather than beside each call.
+
+It catches credentials that announce themselves — reserved vendor prefixes, and values
+following a name like `API_KEY=`. It deliberately does **not** catch bare high-entropy
+strings, because redacting every long opaque token would strip commit SHAs, UUIDs and
+hashes out of legitimate evidence on every sample; nor personal data generally, so the
+billing sentence that motivated the work is itself untouched. Both limits are pinned by
+tests in `tests/test_redact.py` so that nobody infers a wider guarantee than exists.
 
 Three further controls sit in `capture/screen.py`:
 
