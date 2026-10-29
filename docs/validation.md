@@ -132,3 +132,65 @@ are restatements, and all cite figures that were computed rather than generated.
 
 **Open:** whether a real week of the user's own data yields observations this clean, and
 whether confidence calibration on Tier 2 varies at all. `probe.py` answers the second.
+
+## 2026-10-29 — Calibration, downscaling, and threshold stability
+
+Nine screenshots through the production classifier prompt on Muse Spark Open, at capture
+resolution and again reduced to `TARGET_WIDTH`. Two unambiguous full screens, three
+cluttered application screens, four small UI crops with almost no context.
+
+### Confidence is calibrated
+
+| | at capture | at 1024px |
+|---|---|---|
+| x.com feed | doomscrolling 0.88 | doomscrolling 0.88 |
+| Substack article | research 0.88 | research 0.88 |
+| billing page | admin 0.92 | admin 0.92 |
+| API playground | deep work 0.68 | deep work 0.70 |
+| model dropdown | deep work 0.68 | research 0.62 |
+| text fragment | **uncertain 0.35** | **uncertain 0.35** |
+| checkbox crop | admin 0.88 | admin 0.85 |
+| radio crop | admin 0.72 | admin 0.62 |
+| radio crop 2 | **uncertain 0.35** | **uncertain 0.20** |
+
+Five to eight distinct values, spread 0.57 to 0.72. The earlier worry — that both
+playground answers returning exactly 0.9 meant a constant — was wrong. All three bands
+the architecture depends on are populated: clear cases clear `ACCEPT` (0.75), ambiguous
+ones land in the retry band, and genuinely contentless crops abstain.
+
+**The uncertain queue will fill and the retry ladder will climb.** Neither was previously
+demonstrated.
+
+### The model asked for the motion signal by name
+
+Both abstentions cited the same missing evidence, unprompted:
+
+> no motion or input data to distinguish browsing, reading, or task context
+
+> no input or content-replacement measurements to determine ongoing activity
+
+The prompt never mentions churn or input rate. The model identified the absence of
+exactly the two signals `perceive/motion.py` computes, as its reason for refusing to
+guess. That is independent support for the two-axis design — and it means supplying those
+measurements should convert some abstentions into confident answers rather than merely
+decorating them.
+
+### Downscaling to 1024px is safe
+
+Body text survives: the Substack run still cited "stablecoin demand and moats", and the
+billing run still read "$0.00, free credits $150.00, Visa". No classification changed
+category because of the reduction. `TARGET_WIDTH` stands, and with it the argument that
+the reduction is a privacy control that costs nothing in accuracy.
+
+### Confidence drifts about 0.1 between identical runs
+
+The four crops are smaller than `TARGET_WIDTH`, so `--downscale` left them byte-identical
+— yet the radio crop moved 0.72 to 0.62 and the second moved 0.35 to 0.20, at temperature
+0. Reasoning models are not deterministic even with sampling disabled.
+
+**Consequence.** A sample sitting near a threshold will flip between runs, so the system
+must not treat a single reading as authoritative. Two existing decisions turn out to
+matter more than they did when they were made: labels carry forward between
+classifications rather than being recomputed every sample, and session confidence is a
+duration-weighted mean rather than a last-value. Both damp this drift. Thresholds should
+not be tuned more finely than 0.1, because that is below the noise floor.

@@ -137,8 +137,13 @@ async def main() -> None:
     load_env()
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-    if not os.environ.get("META_API_KEY"):
-        sys.exit("META_API_KEY is empty in .env")
+    if not (
+        os.environ.get(f"{args.model_prefix}_API_KEY")
+        or os.environ.get("META_API_KEY")
+    ):
+        sys.exit(
+            f"{args.model_prefix}_API_KEY and META_API_KEY are both empty in .env"
+        )
 
     from groundtruth.backends import Backend, BackendError, Placement
     from groundtruth.perceive.classify import Classifier
