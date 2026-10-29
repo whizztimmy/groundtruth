@@ -143,7 +143,7 @@ class RegionTracker:
                 system="You segment screen regions and return JSON.",
                 user_text=prompt,
                 frame=frame,
-                max_tokens=2048,
+                max_tokens=3000,
             )
         except BackendError:
             raise

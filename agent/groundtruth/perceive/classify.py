@@ -271,7 +271,10 @@ class Classifier:
             user_text=prompt,
             frame=frame,
             reasoning_effort=effort,
-            max_tokens=400,
+            # Generous because Muse Spark Open reasons before it answers: a tight
+            # ceiling returns null content and a finish_reason of "length", which
+            # reads as a broken endpoint rather than a cramped one.
+            max_tokens=2000,
         )
         return parse_response(raw, effort=effort)
 

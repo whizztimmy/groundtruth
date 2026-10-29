@@ -232,14 +232,44 @@ def _extract_text(body: dict[str, Any]) -> str:
     others as a list of typed parts.
     """
     try:
-        content = body["choices"][0]["message"]["content"]
+        choice = body["choices"][0]
+        message = choice["message"]
+        content = message.get("content")
     except (KeyError, IndexError, TypeError) as exc:
         raise BackendError(f"unexpected response shape: {str(body)[:300]}") from exc
 
-    if isinstance(content, str):
+    if isinstance(content, str) and content.strip():
         return content
     if isinstance(content, list):
-        return "".join(
+        joined = "".join(
             part.get("text", "") for part in content if isinstance(part, dict)
         )
-    raise BackendError(f"unexpected content type: {type(content).__name__}")
+        if joined.strip():
+            return joined
+
+    # Reasoning models spend budget thinking before they emit anything, so a tight
+    # max_tokens yields a null content and a finish_reason of "length" — a silent,
+    # confusing failure that looks like a broken endpoint rather than a cramped one.
+    # Muse Spark Open does exactly this. Say so plainly instead of reporting a type.
+    if choice.get("finish_reason") == "length":
+        raise BackendError(
+            f"{backend_name(body)} ran out of tokens before emitting content. "
+            "Reasoning models consume the budget thinking first — raise max_tokens, "
+            "or lower reasoning effort."
+        )
+
+    reasoning = message.get("reasoning_content") or message.get("reasoning")
+    if isinstance(reasoning, str) and reasoning.strip():
+        raise BackendError(
+            "model returned reasoning but no answer; raise max_tokens so it can "
+            f"finish. Reasoning began: {reasoning.strip()[:120]}"
+        )
+
+    raise BackendError(
+        f"model returned empty content (finish_reason="
+        f"{choice.get('finish_reason')!r}); full response: {str(body)[:200]}"
+    )
+
+
+def backend_name(body: dict[str, Any]) -> str:
+    return str(body.get("model") or "model")

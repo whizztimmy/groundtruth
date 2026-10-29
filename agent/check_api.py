@@ -60,7 +60,7 @@ async def main() -> None:
         reply = await chat(
             backend,
             [{"role": "user", "content": "Reply with the single word: ok"}],
-            max_tokens=16,
+            max_tokens=2000,
         )
         print(f"   OK -> {reply.strip()[:60]}")
     except BackendError as exc:
@@ -92,7 +92,7 @@ async def main() -> None:
             system="You describe images in one short phrase.",
             user_text="What colour is this?",
             frame=swatch,
-            max_tokens=32,
+            max_tokens=2000,
         )
         print(f"   OK -> {reply.strip()[:60]}")
         print("   Inline images work; no file upload step needed.")

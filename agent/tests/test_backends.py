@@ -115,3 +115,56 @@ class TestExtractText:
     def test_unexpected_shape_raises(self):
         with pytest.raises(BackendError, match="unexpected response shape"):
             _extract_text({"nope": True})
+
+
+class TestReasoningModelResponses:
+    """Muse Spark Open reasons before it answers.
+
+    A tight max_tokens makes it spend the whole budget thinking and return null content,
+    which previously surfaced as "unexpected content type: NoneType" — an error that
+    points at the parser rather than at the real cause, and sent a debugging session
+    after the wrong thing.
+    """
+
+    def test_truncated_reasoning_names_the_real_cause(self):
+        body = {
+            "model": "meta-models/muse-spark-open-1026",
+            "choices": [{"message": {"content": None}, "finish_reason": "length"}],
+        }
+        with pytest.raises(BackendError, match="ran out of tokens"):
+            _extract_text(body)
+
+    def test_reasoning_without_an_answer_is_explained(self):
+        body = {
+            "choices": [
+                {
+                    "message": {
+                        "content": None,
+                        "reasoning_content": "The screen shows a feed, so I should",
+                    },
+                    "finish_reason": "stop",
+                }
+            ]
+        }
+        with pytest.raises(BackendError, match="reasoning but no answer"):
+            _extract_text(body)
+
+    def test_empty_string_is_not_a_valid_answer(self):
+        """An empty string is a failure dressed as a success."""
+        body = {"choices": [{"message": {"content": "   "}, "finish_reason": "stop"}]}
+        with pytest.raises(BackendError, match="empty content"):
+            _extract_text(body)
+
+    def test_real_content_still_wins_over_reasoning(self):
+        body = {
+            "choices": [
+                {
+                    "message": {
+                        "content": '{"category": "research"}',
+                        "reasoning_content": "thinking...",
+                    },
+                    "finish_reason": "stop",
+                }
+            ]
+        }
+        assert _extract_text(body) == '{"category": "research"}'
