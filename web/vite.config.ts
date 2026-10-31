@@ -6,7 +6,13 @@ import react from "@vitejs/plugin-react";
 // loopback-only binding stays untouched.
 const server = process.env.GROUNDTRUTH_SERVER ?? "http://127.0.0.1:8000";
 
-export default defineConfig({
+// A GitHub Pages project site is served from /<repo>/, so built asset URLs need
+// that prefix. Build only: the dev server stays at / so the local workflow and the
+// proxy below are untouched.
+const BASE = "/groundtruth/";
+
+export default defineConfig(({ command }) => ({
+  base: command === "build" ? BASE : "/",
   plugins: [react()],
   server: {
     port: 5173,
@@ -17,4 +23,4 @@ export default defineConfig({
       ]),
     ),
   },
-});
+}));

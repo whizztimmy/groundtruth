@@ -1,0 +1,67 @@
+# Publishes the dashboard to GitHub Pages as a static site.
+#
+# There is no server behind it, deliberately. The agent's sync server binds to
+# loopback, has no authentication, and its events carry descriptions of whatever was
+# on screen - so the thing a judge can click shows the bundled sample day, and the
+# real one only ever runs on the operator's own machine. The dashboard labels which
+# it is reading: the header badge says "sample day" when no server answers.
+name: Deploy dashboard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time, and a superseded run is abandoned rather than queued: the
+# newest commit is the only one worth publishing.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+
+      # Typecheck before building. A Pages deploy that renders a broken dashboard is
+      # worse than one that fails loudly, because nobody checks a green deploy.
+      - run: npm run typecheck
+
+      - run: npm run build
+
+      - uses: actions/configure-pages@v5
+
+      # Relative to the repository root, not to `working-directory`.
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
