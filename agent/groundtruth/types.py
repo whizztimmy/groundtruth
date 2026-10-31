@@ -77,6 +77,19 @@ class Observation:
     None means the platform could not report it, which is distinct from False.
     """
 
+    screen_churn: float | None = None
+    """Fraction of the screen replaced since the previous frame, when SAM is unavailable.
+
+    The whole-screen stand-in for per-region churn, measured locally by
+    `perceive/framediff.py`. Weaker than `regions` by design: it cannot say which part of
+    the screen moved, so a video in a corner and a full-window feed read alike. It is
+    carried separately rather than as a synthetic whole-screen `Region` so that nothing
+    downstream can mistake it for something SAM tracked.
+
+    None means it could not be measured — the first frame of a session, or a resolution
+    change — which is distinct from 0.0, a screen that genuinely did not move.
+    """
+
     @property
     def is_ambiguous_by_title(self) -> bool:
         """True when the title carries no usable signal on its own."""

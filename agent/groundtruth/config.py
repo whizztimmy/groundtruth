@@ -13,6 +13,36 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
+
+def load_env_file(path: Path | None = None) -> bool:
+    """Read `.env` into the environment, without overriding what is already set.
+
+    The agent had no loader at all until this was written, while `probe.py` and
+    `check_api.py` each carried their own. So the two diagnostic tools saw a configured
+    backend and the product did not: launched the way the README documents, the agent got
+    no `GLIMMER_*` variables, `Backend.from_env` raised, and the loop fell back to the
+    stub classifier for an entire session.
+
+    That is the second time this shape of fault has bitten. The first was startup coupling
+    `SAM_ENDPOINT` to classifier construction, and both share a root: a degradation path
+    that keeps the agent *running* while it stops doing the one thing it exists to do.
+    A tool that reports health must not be configured differently from the thing it
+    reports on, which is why this is the single implementation and the scripts call it.
+
+    `setdefault` rather than assignment, so a variable exported in the shell still wins —
+    that is how `TIER2_ENABLED=1` on the command line is meant to work.
+    """
+    path = path or Path(__file__).resolve().parents[2] / ".env"
+    if not path.exists():
+        return False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip())
+    return True
+
 def _env_float(name: str, default: float) -> float:
     raw = os.environ.get(name)
     if raw is None or not raw.strip():

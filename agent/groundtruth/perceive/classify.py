@@ -111,10 +111,19 @@ def build_prompt(
         for region in sorted(obs.regions, key=lambda r: -r.area_frac):
             lines.append(f"  - {_describe_region(region)}")
 
-    motion = _motion_for(obs.regions, input_history)
+    motion = _motion_for(obs.regions, input_history, obs.screen_churn)
     if motion is not Motion.UNCLEAR:
         lines.append("")
         lines.append(f"Across recent samples: {motion_evidence(motion)}.")
+        if not obs.regions:
+            # Said plainly, because the model should discount it accordingly. A
+            # whole-screen reading cannot tell a corner video from a full-window feed,
+            # and a prior stated more firmly than it deserves is how a heuristic
+            # overrules perception.
+            lines.append(
+                "This was measured across the whole screen rather than per region, "
+                "so it cannot attribute the movement to one part of the display."
+            )
 
     if examples:
         lines.append("")
@@ -136,15 +145,29 @@ def _describe_region(region: Region) -> str:
 
 
 def _motion_for(
-    regions: tuple[Region, ...], input_history: list[bool] | None
+    regions: tuple[Region, ...],
+    input_history: list[bool] | None,
+    screen_churn: float | None = None,
 ) -> Motion:
     """Motion for the region most likely holding attention.
 
     Computed over the attended region rather than the screen as a whole: a video playing
     in a corner while someone writes should not make the whole sample look like playback.
+
+    Falls back to a whole-screen reading when no regions are tracked, which is the
+    everyday case while no SAM endpoint is provisioned. That fallback is exactly the
+    confusion the paragraph above warns about, and it is still worth having: the
+    alternative is sending the model no motion evidence at all, which the calibration run
+    showed it abstaining for want of.
     """
-    if not regions or not input_history:
+    if not input_history:
         return Motion.UNCLEAR
+
+    if not regions:
+        if screen_churn is None:
+            return Motion.UNCLEAR
+        recent = input_history[-3:]
+        return classify_motion([Sample(screen_churn, active) for active in recent])
 
     from .regions import attention_locus
 

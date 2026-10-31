@@ -160,6 +160,7 @@ What is held, and for how long:
 | Raw screen frames | In memory, discarded after classification | Never |
 | Downscaled frame (1024px) | In memory, for the duration of one inference | Only to a `local` or `self_hosted` backend |
 | SAM 3.1 masks | In memory, discarded after feature extraction | Never |
+| Frame digest (64x36 mean luminances) | In memory, one sample, overwritten | Never |
 | Derived region features (churn, persistence) | Discarded after classification | Never |
 | Activity label + confidence + timestamps | Persisted, credential-scrubbed | Only on explicit sync |
 | Voice audio | Discarded after transcription | Never |
@@ -185,6 +186,20 @@ strings, because redacting every long opaque token would strip commit SHAs, UUID
 hashes out of legitimate evidence on every sample; nor personal data generally, so the
 billing sentence that motivated the work is itself untouched. Both limits are pinned by
 tests in `tests/test_redact.py` so that nobody infers a wider guarantee than exists.
+
+**The motion signal is computed locally.** `perceive/framediff.py` reduces a frame to a
+64x36 grid of mean luminances and compares it with the previous sample's grid, which gives
+whole-screen churn with no model, no network and no GPU. The digest is 2,304 bytes and is
+the only thing a sample leaves behind, so the single-buffer invariant above still holds:
+there is never a second frame in memory.
+
+This stands in for the SAM 3.1 path in `perceive/regions.py`, which is implemented and
+unit-tested but has never processed a real frame, because no SAM endpoint is reachable
+with this project's credentials and there is no local GPU. The substitute is weaker — it
+cannot attribute churn to a named region, so a video in a corner and a full-window feed
+read alike — and stronger on privacy, since no pixels or derived features leave the
+machine at all. When a SAM endpoint lands, `regions.py` supersedes it and
+`classify._motion_for` already prefers per-region churn when regions are present.
 
 Three further controls sit in `capture/screen.py`:
 

@@ -8,88 +8,172 @@ Every activity tracker ever built classifies your time by *application name*. So
 distinction people actually care about — focused work vs. doomscrolling, devotion vs.
 idle reading — is **semantic**, and no amount of window-title metadata can recover it.
 
-GroundTruth replaces app-name heuristics with an always-on local agent that understands
-what you were *doing*.
+GroundTruth replaces app-name heuristics with an always-on agent that understands what you
+were *doing*.
 
 ```
   Screen Time                     GroundTruth
-  ───────────                     ───────────
+  -----------                     -----------
   Chrome ............ 4h 12m      Scripture reading ......... 25m
   VS Code ........... 2h 03m      Deep work (auth refactor) . 1h 40m
   Instagram ......... 0h 48m      Doomscrolling ............. 2h 31m
                                   Research (reading docs) ... 1h 09m
-                                  Gym (voice-logged) ........ 55m
+                                  Uncertain - ask me ........ 0h 18m
                                   Idle / away ............... 0h 23m
 ```
+
+That `Uncertain` row is not a defect. It is a system that declines to guess, and it is
+measured: on a calibration set, genuinely contentless screens come back at 0.35 confidence
+with the model naming the evidence it lacks, while unambiguous ones clear 0.88. A tracker
+that silently invents a label for the hard 10% is a tracker whose other 90% you cannot
+trust either.
 
 ## Why this is built on open weights
 
 The most sensitive data a person has is their own screen. A tracker that understands your
-screen is only acceptable if that understanding never leaves your machine.
+screen is only acceptable if that understanding never reaches anyone who could keep it.
 
-So GroundTruth runs **Muse Glimmer** — Meta's Apache-2.0, 30B, always-on local agent
-model — as its classifier. Frames are perceived and discarded; only derived labels are
-ever persisted or synced. The model comes to your data instead of your data going to a
-model.
+So GroundTruth classifies with **Muse Spark Open** — Meta's open-weights reasoning model —
+rather than a vendor-managed endpoint. Frames are perceived and discarded; only derived
+labels are ever persisted or synced.
 
-Because the weights are open, that holds whether Glimmer runs on your own GPU or on
-infrastructure you rent and control — it is the same model either way, and moving it
-on-device is a config change. What it never runs on is a vendor-managed endpoint that
-could retain your screen. The agent enforces this rather than promising it: sending a
-frame to a managed backend raises instead of succeeding, and a misconfigured backend
-defaults to refusing. See [Placement](ARCHITECTURE.md#placement).
+Because the weights are open, that argument holds wherever the model runs: your own GPU,
+or infrastructure you rent and control. It is the same model either way, and moving it
+on-device is a config change rather than a rewrite. What it never runs on is a
+vendor-managed endpoint that could retain your screen.
 
-That is not a feature bolted onto a time tracker. It is the entire thesis, and it is a
-working implementation of the argument in *The Future Is for Everyone*: superintelligence
-that belongs to the individual, running on hardware the individual controls.
+The agent enforces this rather than promising it. Sending a frame to a `managed` backend
+raises `PlacementViolation` instead of succeeding, and a backend with no declared
+placement defaults to `managed` — so a misconfiguration costs a refused call, never a
+silent leak. See [Placement](ARCHITECTURE.md#placement).
+
+Two further controls follow from the same argument. Frames are reduced to 1024px before
+they leave the capture module, which costs nothing in accuracy (measured — see
+[validation](docs/validation.md)) and strips fine body text. And because a *description*
+of a screen is not a screen, derived labels are scrubbed of credential-shaped text before
+they are stored, at the single gate every persisted string passes through.
+
+That is not a feature bolted onto a time tracker. It is the entire thesis, and a working
+implementation of the argument in *The Future Is for Everyone*: superintelligence that
+belongs to the individual, running where the individual decides.
 
 ## How it works
 
-A three-tier escalation ladder. Each tier is more expensive and more revealing than the
-last, so GroundTruth only climbs when the tier below it is genuinely ambiguous.
+An escalation ladder. Each rung is more expensive and more revealing than the last, so
+GroundTruth only climbs when the rung below is genuinely ambiguous.
 
-| Tier | Signal | Cost | Fires when |
-|------|--------|------|-----------|
-| 1 | Foreground window + process name | Free | Always |
-| 2 | Screen regions via **SAM 3.1** + classification via **Muse Glimmer** | Local GPU | Tier 1 is ambiguous (e.g. a browser) |
-| 3 | Voice check-in via **Muse Voice Transcribe** | Remote, rare | Off-screen time — gym, devotion, travel |
+| Tier | Signal | Cost | Fires when | Status |
+|------|--------|------|-----------|--------|
+| 1 | Foreground window + process name | Free | Always | **Running** |
+| 2 | Screen frame + local motion signal, classified by **Muse Spark Open** | Rented GPU | Tier 1 is ambiguous (e.g. a browser) | **Running** |
+| 3 | Voice check-in via **Muse Voice Transcribe** | Remote, rare | Off-screen time — gym, devotion, travel | **Not implemented** |
+| 4 | Weekly synthesis via **Muse Spark** on the Meta Model API | Remote, weekly | On request | **Running** |
 
-Photoshop is unambiguous; a browser never is. Roughly 70% of a day resolves at Tier 1 for
-free, which is what makes always-on local operation affordable.
+Photoshop is unambiguous; a browser never is. A process-name table resolves the
+unambiguous majority for free, which is what makes always-on operation affordable, and an
+escalation policy decides the rest — rate limit, then ambiguous process, then unusable
+title, then unrecognised process, then a low-confidence streak, then periodic
+re-verification.
 
-### SAM 3.1 as an attention sensor
+### Attention as motion, not as window focus
 
-Tier 2 does something SAM 3.1 was not built for. Rather than segmenting photographs,
-GroundTruth treats **the desktop as a video scene** and uses SAM 3.1's object multiplexing
-(up to 16 objects per forward pass) to track screen regions over time — editor, terminal,
-feed, video player, chat.
+The unit of attention is not the window. A developer with docs on one monitor and a feed
+on the other is the normal case, and every existing tracker scores that as 100% of
+whichever window held focus.
 
-This matters because the unit of attention is not the window. A developer with docs on one
-monitor and a feed on the other is the normal case, and every existing tracker scores that
-as 100% of whichever window held focus. GroundTruth measures where attention actually sat.
+A single frame also cannot separate reading from scrolling — the same page, the same URL,
+the same layout. What separates them is *content replacement over time*: a feed replaces
+what sits in a region while reading holds it. So Tier 2 pairs a churn measurement with
+input activity and hands the classifier a two-axis prior — scrolling, playing, reading or
+working — phrased as an observation rather than a verdict, so the model can overrule it
+when a terminal scrolls during real work.
+
+The classifier asked for this signal by name before it was built. Both abstentions in the
+calibration run cited the same absence, unprompted:
+
+> no motion or input data to distinguish browsing, reading, or task context
+
+**What ships** is `perceive/framediff.py`: the frame reduced to a 64x36 grid of mean
+luminances and compared against the previous sample's grid. No model, no network, nothing
+leaves the machine. Only the 2,304-byte digest outlives a sample, never a second frame, so
+the single-buffer capture invariant holds.
+
+**What is written but not provisioned** is the SAM 3.1 path. `perceive/regions.py` uses
+SAM 3.1's object multiplexing (up to 16 objects per forward pass) to track named screen
+regions — editor, terminal, feed, video player — so churn can be attributed to *which*
+region moved, which the whole-screen measurement cannot do. It is implemented and
+unit-tested against synthetic detections, and it has never processed a real frame: no SAM
+endpoint is reachable with the credentials this project has, and there is no local GPU to
+serve it on. One function, `_parse_detections`, is written against documentation rather
+than a live endpoint and is contained for exactly that reason.
+
+The honest summary: the cheap signal answers the question the model was asking. The SAM
+path would answer it better, and is not currently running.
 
 ## Meta models used
 
-| Model | Role |
-|-------|------|
-| **Muse Glimmer** (open weights, local) | Always-on activity classification, session labelling |
-| **SAM 3.1** | Multiplexed screen-region tracking as an attention signal |
-| **Muse Voice Transcribe** | Off-screen activity capture via voice check-in |
-| **Muse Spark / Muse Wonder** | Escalation tier — weekly synthesis and pattern reasoning |
+**In the loop:**
+
+| Model | Role | Placement |
+|-------|------|-----------|
+| **Muse Spark Open** (`muse-spark-open-1026`) | Tier 2 activity classification and session labelling | `self_hosted` — open weights on rented infrastructure |
+| **Muse Spark 1.3** (Meta Model API) | Tier 4 weekly synthesis and pattern reasoning | `managed` — receives category names and durations, never a frame, title or transcript |
+
+**Integrated, not provisioned:** SAM 3.1 for multiplexed region tracking, and Muse Voice
+Transcribe for off-screen capture.
 
 ## Platforms
 
 | Platform | Capture method | Status |
 |----------|---------------|--------|
-| Windows | Full three-tier agent | Primary |
-| Android | `UsageStatsManager` + voice check-in | Planned |
-| iOS | Shortcuts automations + Focus triggers + voice | Constrained — see below |
+| Windows | Tiers 1, 2 and 4 | **Running** |
+| Android | `UsageStatsManager` + voice check-in | Not started |
+| iOS | Shortcuts automations + Focus triggers + voice | Not started — and constrained, see below |
 
-**On iOS:** Apple's `DeviceActivityReport` renders inside a sandboxed extension
-specifically so third-party code cannot read usage values out. There is no API, no
-entitlement, and no workaround. GroundTruth works within that limit using Shortcuts
-personal automations, Focus-mode boundaries, and voice check-ins rather than pretending
-the restriction does not exist.
+Nothing mobile ships in this submission. The agent, the sync server and the dashboard are
+desktop only.
+
+**On iOS,** when it is built: Apple's `DeviceActivityReport` renders inside a sandboxed
+extension specifically so third-party code cannot read usage values out. There is no API,
+no entitlement and no workaround. The plan works within that limit using Shortcuts
+personal automations, Focus-mode boundaries and voice check-ins rather than pretending the
+restriction does not exist.
+
+## What is in this repository
+
+| Part | Contents | Tests |
+|------|----------|-------|
+| `agent/` | Capture, escalation, perception, classification, buffer, sync, weekly review | 229 |
+| `server/` | Event ingest, idempotent on `(device_id, ts)`, session segmentation, derivation | 126 |
+| `web/` | Dashboard: day timeline, the contrast view, the uncertain queue | — |
+| `scripts/` | Pre-commit credential scanner | 35 |
+
+`docs/validation.md` records what was actually tested and what it showed, including the
+results that contradicted the design — a still frame being sufficient where churn was
+assumed necessary, confidence turning out to be calibrated after it was assumed constant,
+and a reasoning model spending its whole token budget before answering.
+
+## Running it
+
+```bash
+cp .env.example .env
+git config core.hooksPath .githooks
+```
+
+```bash
+cd agent && ./.venv/Scripts/python.exe -m pytest tests/ -q
+```
+
+```bash
+cd agent && ./.venv/Scripts/python.exe check_api.py
+```
+
+```bash
+cd agent && TIER2_ENABLED=1 ./.venv/Scripts/python.exe -m groundtruth.main
+```
+
+Tier 2 opts in rather than out. Leave `TIER2_ENABLED` unset and the agent captures no
+frames at all — a misconfigured agent should see less than intended, never more.
 
 ---
 
@@ -99,7 +183,7 @@ Built for the **Meta Global AI Developer Hackathon** (Oct 26 – Nov 4, 2026), I
 Developer track.
 
 **100% of the code in this repository was written during the hackathon window.** The
-repository was created on Oct 28, 2026 and has no prior history, no pre-existing codebase,
+repository was created on Oct 28, 2026 and has no prior history, no pre-existing codebase
 and no vendored work from earlier projects. Every commit is dated within the event period
 and the full history is public.
 

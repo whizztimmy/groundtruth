@@ -311,3 +311,95 @@ where Muse scores *worse* at high effort than at low. `perceive/classify.py` esc
 `EFFORT_LADDER` on low confidence, assuming more effort helps. Those benchmarks are text,
 not screen classification, so this does not transfer — but it does mean the ladder is an
 assumption this project has never tested, and `probe.py` can test it.
+
+## 2026-10-31 — No SAM host, a stub running in production, and churn that argues against itself
+
+### SAM 3.1 is not reachable, so churn is measured locally
+
+Listing the models the Baseten key can reach returned 21, every one of them text —
+DeepSeek, GLM, Kimi, Nemotron, `muse-spark-open`. No segmentation model of any kind.
+Baseten's Model APIs are text inference; SAM would need a dedicated deployment on an
+account this project administers, and there is no local GPU to serve it on instead.
+
+So `perceive/framediff.py` measures the same underlying quantity without a model: the
+frame reduced to a 64x36 grid of mean luminances, compared with the previous sample's
+grid. Only the 2,304-byte digest outlives a sample, so the single-buffer capture invariant
+holds and nothing derived from pixels leaves the machine.
+
+Writing the tests corrected the code. `CELL_DELTA` was documented as the thing that stops
+a blinking caret counting as churn. It is not — a 2x18 caret lights its own cell
+comfortably. The protection is the *ratio*: one or two cells out of 2,304 sits three
+orders of magnitude below `STATIC`. What `CELL_DELTA` actually prevents is a global
+luminance step — a backlight change or a theme animation — reading as 100% churn on an
+untouched screen. The test now pins that behaviour instead of the comment.
+
+### The agent had been running a stub
+
+The first live run after wiring returned `shallow work | 0.50` for every sample, Tier 1
+and Tier 2 alike. The stored evidence said why in its own words:
+
+> Browser in foreground; contents unexamined. (stub classifier — not a real observation)
+
+**`main.py` never loaded `.env`.** `probe.py` and `check_api.py` each carried their own
+loader, so both diagnostics saw a configured backend while the product saw nothing:
+launched the way `README.md` documents, `Backend.from_env` raised and the loop fell back
+to `StubClassifier` for the whole session.
+
+This is the second fault of the same shape. The first was startup coupling `SAM_ENDPOINT`
+to classifier construction, which discarded a working classifier and reverted the agent to
+app-name labelling. Both are degradation paths that keep the agent *running* while it
+stops doing the one thing it exists to do, and both were invisible from the outside
+because the stub is well-behaved.
+
+There is now one loader in `config.py`, called by the agent, with both scripts deferring
+to it. A tool that reports on configuration must not be configured differently from the
+thing it reports on.
+
+### The motion signal reaches the model, and sometimes argues against the frame
+
+Five Tier 2 classifications on a real desktop after the fix, confidence 0.35 to 0.88. Both
+bands populated in a *live* run for the first time — previously every live sample came
+back confident.
+
+Three of five evidence strings cite the motion measurement unprompted, so the prompt wiring
+works:
+
+> telemetry shows content held still with almost no input indicating reading/reviewing
+> rather than active typing
+
+That one became `deep work` at 0.82, where the frame alone had been ambiguous. The signal
+helped.
+
+**Then this one, which matters more:**
+
+> Screenshot shows a static Mercor contracts page but telemetry reports continuous content
+> replacement with almost no input and whole-screen measurement cannot localize the
+> movement to a specific region
+
+Confidence 0.35. The frame showed a static page; whole-screen churn said the screen was
+being replaced continuously. Something else on the display was moving, the measurement
+could not say what, and the model declined to resolve the contradiction rather than
+guessing.
+
+**So the fallback converted an answerable sample into an abstention.** That is the exact
+weakness predicted when it was written, now observed rather than asserted, and it is the
+strongest available argument for the SAM path: per-region churn would have attributed the
+movement to the region that moved and left the contracts page reading as static. The model
+even named the deficiency — *"cannot localize the movement to a specific region"* — which
+is the caveat line the prompt supplies, used as intended.
+
+A third sample reported no measurements at all: middling churn resolves to `UNCLEAR` in
+`motion.classify`, which emits no evidence line. Honest, and it means some samples are
+still no better off than before.
+
+**Net:** whole-screen churn is worth having and is not a substitute. It helps where it
+agrees with the frame, abstains where it conflicts, and says nothing in the middle band.
+The claim that it "converts abstentions into answers" is not supported — it also creates
+them.
+
+### Noted in passing
+
+One evidence string captured `work.mercor.com/earnings with $10.77 total earnings`. That is
+the documented limit of `redact.py` working as specified: it scrubs credentials, not
+personal data generally. The limit is pinned by a test, and this is what it looks like in
+practice on a real screen.

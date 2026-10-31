@@ -29,9 +29,10 @@ from .capture.window import CaptureUnavailable
 from .backends import Backend, BackendError
 from .perceive.classify import Classifier
 from .perceive.regions import RegionTracker
-from .config import Config
+from .config import Config, load_env_file
 from .escalate import EscalationState, should_escalate
 from .sync import SyncClient
+from .perceive import framediff
 from .types import Classification, Event, Observation, Tier
 
 log = logging.getLogger("groundtruth")
@@ -132,6 +133,12 @@ class Agent:
         self._state = EscalationState()
         self._stopping = asyncio.Event()
         self._input_history: list[bool] = []
+        self._last_digest: framediff.Digest | None = None
+        """Previous frame reduced to grid-cell luminances, for whole-screen churn.
+
+        The one thing a sample leaves behind. 2,304 bytes, from which no screen can be
+        reconstructed, and the reason churn is measurable without keeping a second frame.
+        """
         """Recent per-sample input flags, newest last.
 
         Half of the motion model in `perceive/motion.py`. The churn half arrives with
@@ -233,6 +240,19 @@ class Agent:
 
         frame = self._grab_frame() if self._grab_frame else None
 
+        if frame is not None:
+            # Whole-screen churn, computed locally. Measured even when a tracker is
+            # present, because it costs microseconds and `_motion_for` prefers per-region
+            # churn anyway; this only reaches the prompt when regions are absent.
+            #
+            # Only the digest outlives the sample, never the frame. See framediff.py.
+            current = framediff.digest(frame)
+            if self._last_digest is not None:
+                measured = framediff.churn_of(self._last_digest, current)
+                obs = replace(obs, screen_churn=measured)
+                log.debug("screen churn %.3f", measured)
+            self._last_digest = current
+
         if frame is not None and self._tracker is not None:
             try:
                 obs = replace(obs, regions=await self._tracker.track(frame))
@@ -310,6 +330,10 @@ async def _sync_forever(client: SyncClient, interval_s: float, stop: asyncio.Eve
 
 
 async def _main() -> None:
+    # Before anything reads os.environ. See config.load_env_file for why this is
+    # here rather than in a wrapper script.
+    load_env_file()
+
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s"
     )
@@ -374,7 +398,8 @@ async def _main() -> None:
             log.info("region tracking ready")
         except BackendError as exc:
             log.warning(
-                "region tracking unavailable (%s); classifying without churn evidence",
+                "region tracking unavailable (%s); falling back to whole-screen churn, "
+                "which cannot attribute movement to a region",
                 exc,
             )
 

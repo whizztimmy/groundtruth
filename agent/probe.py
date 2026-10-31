@@ -17,6 +17,19 @@ hand or re-runs them after a prompt change. This does.
 `--downscale` reduces each image to `TARGET_WIDTH` first, which answers the second open
 question: whether classification survives the reduction `capture/screen.py` applies.
 
+    python probe.py --sweep shots/*.png                # one row per effort level
+
+`--sweep` runs each image through `EFFORT_LADDER` instead of a single level, and answers a
+question the ladder has always assumed rather than tested: **does escalating reasoning
+effort improve a low-confidence answer, or degrade it?**
+
+`classify_verified` climbs that ladder whenever confidence lands under `ACCEPT`, on the
+premise that more thinking helps. The Fireworks workshop published a sweep on short-answer
+text benchmarks where Muse scores *worse* at high effort than at low. Those are text tasks
+and this is screen classification, so the finding does not transfer — but it does mean the
+premise is untested here, and the samples the ladder actually fires on are the ambiguous
+ones, which are exactly where a wrong premise would do its damage.
+
 ## On placement
 
 This tool sends images to whatever backend `--model-prefix` names, typically a `managed`
@@ -40,16 +53,13 @@ from pathlib import Path
 
 
 def load_env() -> None:
-    path = Path(__file__).resolve().parent.parent / ".env"
-    if not path.exists():
-        sys.exit(f"no .env at {path}")
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        os.environ.setdefault(key.strip(), value.strip())
+    """Defers to the agent's own loader, so a tool cannot be configured differently from
+    the thing it is diagnosing. That divergence is what hid the stub-classifier fault."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from groundtruth.config import load_env_file
 
+    if not load_env_file():
+        sys.exit("no .env at the repository root")
 
 @dataclass(frozen=True, slots=True)
 class Result:
@@ -58,9 +68,12 @@ class Result:
     confidence: float
     evidence: str
     width: int
+    effort: str = "low"
 
 
-async def probe_one(classifier, path: Path, *, downscale: bool) -> Result:
+async def probe_one(
+    classifier, path: Path, *, downscale: bool, effort: str = "low"
+) -> Result:
     from PIL import Image
 
     from groundtruth.capture.screen import TARGET_WIDTH, _downscale
@@ -75,13 +88,14 @@ async def probe_one(classifier, path: Path, *, downscale: bool) -> Result:
     # which is the thing being measured. Supplying a window title would let it answer
     # from metadata and tell us nothing about perception.
     observation = Observation(ts=datetime.now(timezone.utc), tier=Tier.SCREEN)
-    result = await classifier.classify(observation, frame, effort="low")
+    result = await classifier.classify(observation, frame, effort=effort)
     return Result(
         name=path.name,
         category=result.category,
         confidence=result.confidence,
         evidence=result.evidence,
         width=frame.width,
+        effort=effort,
     )
 
 
@@ -123,6 +137,76 @@ def report(results: list[Result]) -> None:
             )
 
 
+def sweep_report(results: list[Result], ladder: tuple[str, ...]) -> None:
+    """Tabulate image x effort, then say which direction the ladder moved things.
+
+    Reports category changes separately from confidence changes because they mean
+    different things: a drifting number is noise the design already damps, while a
+    category that flips under escalation means the retry is changing the answer, not
+    just its stated certainty.
+    """
+    by_image: dict[str, dict[str, Result]] = {}
+    for r in results:
+        by_image.setdefault(r.name, {})[r.effort] = r
+
+    width = max((len(n) for n in by_image), default=10)
+    print()
+    print(f"{'image':<{width}}  " + "  ".join(f"{e:>18}" for e in ladder))
+    print("-" * (width + 2 + 20 * len(ladder)))
+    for name, cells in by_image.items():
+        row = []
+        for e in ladder:
+            r = cells.get(e)
+            row.append(f"{r.category[:11]:<11} {r.confidence:>5.2f}" if r else f"{'-':>17}")
+        print(f"{name:<{width}}  " + "  ".join(f"{c:>18}" for c in row))
+
+    rose = fell = flat = 0
+    flipped: list[str] = []
+    for name, cells in by_image.items():
+        first, last = cells.get(ladder[0]), cells.get(ladder[-1])
+        if not first or not last:
+            continue
+        delta = last.confidence - first.confidence
+        # 0.1 is the measured run-to-run drift floor from docs/validation.md. Anything
+        # inside it is not a movement, and calling it one would be reading noise.
+        if delta > 0.1:
+            rose += 1
+        elif delta < -0.1:
+            fell += 1
+        else:
+            flat += 1
+        if first.category != last.category:
+            flipped.append(f"{name}: {first.category} -> {last.category}")
+
+    print()
+    print(f"from {ladder[0]} to {ladder[-1]}, beyond the 0.1 noise floor:")
+    print(f"  confidence rose on {rose}, fell on {fell}, unchanged on {flat}")
+    if flipped:
+        print("  category changed:")
+        for line in flipped:
+            print(f"    {line}")
+    else:
+        print("  no category changed")
+
+    print()
+    if fell > rose:
+        print(
+            "Escalating made answers LESS confident more often than more confident. The "
+            "ladder in classify_verified is spending tokens to make things worse; it "
+            "should stop at the level that performs best rather than climbing."
+        )
+    elif rose > fell:
+        print(
+            "Escalating raised confidence more often than it lowered it. The ladder's "
+            "premise holds on this sample."
+        )
+    else:
+        print(
+            "No net direction. The ladder is costing tokens and latency for no measured "
+            "gain, which is an argument for dropping it rather than keeping it."
+        )
+
+
 async def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("images", nargs="+", type=Path)
@@ -132,6 +216,18 @@ async def main() -> None:
         help="Reduce to production capture width before sending.",
     )
     parser.add_argument("--model-prefix", default="SPARK")
+    parser.add_argument(
+        "--sweep",
+        action="store_true",
+        help="Run each image through EFFORT_LADDER instead of one level.",
+    )
+    parser.add_argument(
+        "--repeat",
+        type=int,
+        default=1,
+        help="Readings per cell. Reasoning models are not deterministic; see "
+        "docs/validation.md on the 0.1 drift floor.",
+    )
     args = parser.parse_args()
 
     load_env()
@@ -146,7 +242,7 @@ async def main() -> None:
         )
 
     from groundtruth.backends import Backend, BackendError, Placement
-    from groundtruth.perceive.classify import Classifier
+    from groundtruth.perceive.classify import EFFORT_LADDER, Classifier
 
     configured = Backend.from_env(args.model_prefix)
     # The deliberate override described in the module docstring. Confined to this file.
@@ -159,17 +255,29 @@ async def main() -> None:
     print(f"model: {probe_backend.model}  (placement overridden for named files)")
 
     classifier = Classifier(probe_backend)
+    ladder = EFFORT_LADDER if args.sweep else ("low",)
     results: list[Result] = []
     for path in args.images:
         if not path.exists():
             print(f"skipping {path}: not found")
             continue
-        try:
-            results.append(await probe_one(classifier, path, downscale=args.downscale))
-        except BackendError as exc:
-            print(f"{path.name}: FAILED -> {exc}")
+        for effort in ladder:
+            for _ in range(args.repeat):
+                try:
+                    results.append(
+                        await probe_one(
+                            classifier, path, downscale=args.downscale, effort=effort
+                        )
+                    )
+                    print(f"  {path.name} @ {effort}: {results[-1].category} "
+                          f"{results[-1].confidence:.2f}")
+                except BackendError as exc:
+                    print(f"{path.name} @ {effort}: FAILED -> {exc}")
 
-    report(results)
+    if args.sweep:
+        sweep_report(results, ladder)
+    else:
+        report(results)
 
 
 if __name__ == "__main__":
