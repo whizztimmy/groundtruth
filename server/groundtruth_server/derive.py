@@ -24,7 +24,13 @@ from .models import (
     Resolution,
     evidence_summary,
 )
-from .segment import SegmentConfig, Span, apply_resolutions, segment_spans
+from .segment import (
+    SegmentConfig,
+    Span,
+    apply_resolutions,
+    apply_stated_spans,
+    segment_spans,
+)
 from .store import EventStore
 
 MAX_SUGGESTIONS = 3
@@ -73,7 +79,10 @@ def derive_spans(
     if not events:
         return []
     overlay = store.resolutions_between(start, end)
-    return segment_spans(apply_resolutions(events, overlay), config)
+    # Stated spans are applied after resolutions: a check-in and a resolution can
+    # both touch one stretch, and the check-in is the broader claim.
+    resolved = apply_resolutions(events, overlay)
+    return segment_spans(apply_stated_spans(resolved, config), config)
 
 
 def select_spans(

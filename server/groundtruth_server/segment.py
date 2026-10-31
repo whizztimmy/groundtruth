@@ -43,7 +43,7 @@ from datetime import datetime, timedelta
 from collections.abc import Iterable, Sequence
 
 from .ids import derive_id
-from .models import UNCERTAIN, Coverage, Event, Resolution, Session
+from .models import UNCERTAIN, Coverage, Event, Resolution, Session, Tier
 
 MAX_EVIDENCE_LINES = 6
 """How many distinct evidence strings a span keeps.
@@ -330,3 +330,84 @@ def apply_resolutions(
             )
         )
     return tuple(out)
+
+
+def stated_intervals(
+    events: Iterable[Event], config: SegmentConfig | None = None
+) -> dict[str, list[tuple[datetime, datetime]]]:
+    """Per device, the intervals a Tier 3 check-in claims.
+
+    A check-in arrives as a run of instants at the client's cadence, not as a span, because
+    `docs/API.md` has no duration field. So the interval is reconstructed from first to last
+    event of each run, where a run breaks on a change of category or label, or on a gap wider
+    than `idle_gap_s` — the same question the segmenter asks, so two check-ins an hour apart
+    do not merge into one interval swallowing the work between them.
+    """
+    config = config or SegmentConfig()
+    intervals: dict[str, list[tuple[datetime, datetime]]] = {}
+
+    stated: dict[str, list[Event]] = {}
+    for event in order_events(events):
+        if event.tier is Tier.VOICE:
+            stated.setdefault(event.device_id, []).append(event)
+
+    for device, run_events in stated.items():
+        start = prev = None
+        key = None
+        for event in run_events:
+            same = (event.category, event.label) == key
+            contiguous = (
+                prev is not None
+                and (event.ts - prev.ts).total_seconds() <= config.idle_gap_s
+            )
+            if start is None or not (same and contiguous):
+                if start is not None:
+                    intervals.setdefault(device, []).append((start.ts, prev.ts))
+                start = event
+                key = (event.category, event.label)
+            prev = event
+        if start is not None:
+            intervals.setdefault(device, []).append((start.ts, prev.ts))
+
+    return intervals
+
+
+def apply_stated_spans(
+    events: Iterable[Event], config: SegmentConfig | None = None
+) -> tuple[Event, ...]:
+    """Drop observations that a user-stated span contradicts, on the same device.
+
+    `Tier` says a user-stated label supersedes a classified one, but `order_events` only
+    applies that to events sharing an instant. A check-in covers a *span*, and the first
+    live run showed what that costs: a 40-minute gym check-in backdated over the two minutes
+    the desktop agent was also sampling produced `deep work, uncertain, fitness, uncertain,
+    deep work` — five sessions, three of them zero seconds long, thrashing between two
+    contradictory claims about the same minutes.
+
+    The rule is physical rather than statistical: you cannot be at the gym and at this
+    desk. So where a person has stated what they were doing, their statement wins and the
+    machine's guess about those same minutes is not derived.
+
+    **Same device only.** Across devices an overlap is not a contradiction — a desktop left
+    rendering something while you are out is a real record from a different machine, and
+    suppressing it would be this function inventing a fact rather than preferring one.
+
+    Nothing is deleted. Events stay append-only and the device's own record survives; this
+    is an overlay at read time, exactly as `apply_resolutions` is, so a taxonomy change or a
+    deleted check-in re-derives the observations that were set aside.
+    """
+    config = config or SegmentConfig()
+    intervals = stated_intervals(events, config)
+    if not intervals:
+        return order_events(events)
+
+    kept: list[Event] = []
+    for event in order_events(events):
+        if event.tier is Tier.VOICE:
+            kept.append(event)
+            continue
+        spans = intervals.get(event.device_id, ())
+        if any(start <= event.ts <= end for start, end in spans):
+            continue
+        kept.append(event)
+    return tuple(kept)

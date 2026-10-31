@@ -566,3 +566,77 @@ not need stating, and a tier that accepted it would double-count the day.
 **The agent never opens a microphone.** There is no capture path in the codebase, so Tier
 3 only runs when a person invokes it. That is a stronger control than a runtime check — a
 guard that permits background audio under conditions is one somebody eventually widens.
+
+## 2026-10-31 — First end-to-end run on real data, and the bug it found
+
+Everything had been verified a component at a time. Nothing had travelled the whole path.
+The audit before this run:
+
+| | Real | Fixture or stub |
+|---|---|---|
+| Agent buffer | 18 events, 1m 48s of wall clock | 54 stub rows |
+| Server | **0 events ever synced** | 480 fixture events |
+| Dashboard | never rendered real data | fixture only |
+
+The 54 stub rows were the broken-`.env` session, self-labelled "not a real observation".
+Backed up and removed before the first real sync, so the project's first real dataset did
+not open with an hour of fabricated "shallow work".
+
+### The path works
+
+74 real events, 6 real sessions, all from live inference on an actual desktop.
+`flush_all` returned `sent=25, accepted=25, duplicates=0` and the buffer drained to zero.
+Capture, classification, buffering, sync, and derivation had never run as one system
+before; they do.
+
+The segmenter also proved itself on real input rather than fixtures: a 72-minute gap
+between two runs closed the first session instead of absorbing the gap, which is the
+idle-gap handling the fixture was built to exercise.
+
+### A backdated check-in shattered the timeline
+
+A 40-minute gym check-in, recorded while the desktop agent was sampling, derived as:
+
+```
+18:51-18:52   1m  deep work   0.88
+18:52-18:52   0m  uncertain   0.72
+18:52-18:52   0m  fitness     0.97   <- the check-in
+18:52-18:52   0m  uncertain   0.72
+18:52-18:55   2m  deep work   0.82
+```
+
+`Tier` says a user-stated label supersedes a classified one, but `order_events` only
+applied that to events sharing an *instant*. A check-in claims a span, so the overlap
+interleaved by timestamp and thrashed between two contradictory claims about the same
+minutes. The fixture never exposed it because there the gym is on a different device with
+the desktop silent.
+
+**The first fix considered was wrong.** Refusing a check-in that overlaps observed time
+sounds right and is not: if you are at the gym with the desktop left on, the agent may log
+"reading" from a static screen — the gym claim is true and the observation is the artifact.
+Refusing would discard the better evidence.
+
+So `apply_stated_spans` is a read-time overlay beside `apply_resolutions`: within one
+device, observations inside a stated interval are not derived. Nothing is deleted, so a
+removed check-in re-derives them. Across devices an overlap is left alone, because a
+desktop rendering something while its owner is out is a real record from another machine.
+
+Real data after the fix: 9 sessions to 6, no zero-length spans, the check-in one clean
+38-minute block.
+
+### Two things this leaves
+
+**The stated interval ends at the last check-in event, not at the claimed end time.**
+Events are instants — `docs/API.md` has no duration field — so a check-in claiming
+18:14–18:54 at a two-minute cadence yields an interval of 18:14–18:52, and up to one
+cadence of the claim goes unprotected. A short observed span survived at 18:52 for exactly
+this reason. The server could infer the cadence from the median gap in the run; it does not
+yet.
+
+**The agent's check-in cadence equals `SegmentConfig.idle_gap_s` exactly**, 120 seconds
+both. That is why a check-in holds together as one session rather than shattering into one
+session per event. It is load-bearing and was coincidental, so the run-break comparison is
+`<=` rather than `<` and a test pins it.
+
+**Still no history.** The real day totals 41 minutes and 38 of those are a backdated
+check-in. The pipeline is proven; it has never been left running.
