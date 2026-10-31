@@ -247,3 +247,67 @@ enough that a category does not flip within a stable activity.
 - Still open: whether churn evidence improves these labels or merely decorates them. That
   needs a SAM host, and the abstentions recorded earlier suggest it will matter most on
   the samples that currently decline to answer.
+
+## 2026-10-31 — Tier 4 against Meta's own endpoint
+
+`META_API_KEY` in place, so Tier 4 now runs on `muse-spark-1.3` at `api.meta.ai/v1` with
+`managed` placement. `check_api.py` settled the transport in one pass: `/chat/completions`
+works, inline base64 images work, and the review path returns usable JSON. The playground
+generates `/responses` and an upload step for images; neither is required, so `backends.py`
+needed no change for Meta any more than it did for Baseten.
+
+### A harness, because a review of real data cannot be marked
+
+If the model says deep work is fragmented, there is no way to know whether that is insight
+or noise unless the answer is already known. `review_week.py` builds a week with three
+patterns planted on purpose — a deep-work/doomscrolling trade-off across days, deep work
+fragmented into 8 stretches averaging 48m, and weekdays opening with deep work while
+weekends open with devotion — and takes a backend prefix, so the same input can go through
+two models.
+
+### The "restating one figure" rule had a loophole
+
+Five runs on identical input. The trade-off was found in all five. Two runs also produced
+this shape:
+
+> The period fitness total matches the Saturday fitness amount
+> (fitness: 1h; Saturday: fitness 1h)
+
+Which satisfies every rule in the prompt. It cites figures, it computes nothing, it
+relates two numbers rather than restating one — and it says nothing at all, because
+fitness happened on exactly one day, so those two figures are the same fact wearing a
+comparison's clothes.
+
+The prompt now names that: *two figures that cannot differ are one figure*, with the test
+being whether they could have come out differently from each other.
+
+**Three runs after the change.** The tautologies are gone. Two runs were clean — the
+trade-off plus either the fragmentation or the stretch-length comparison. The third
+produced a different fault instead:
+
+> Days begin with implementing the sync client, writing the classifier, ... while
+> doomscrolling totals 7h 50m (41%)
+
+Two unrelated figures bolted together. Pushing the model off tautology moved it toward
+spurious relation, which is the harder failure to catch because it reads as analysis. Net
+better — a vacuous observation wastes attention, a spurious one misleads — but not solved.
+
+### Tier 4 output varies more than Tier 2 does
+
+Five runs, identical input, and the set of observations differed every time. The 2026-10-29
+entry noted ~0.1 confidence drift on Tier 2; at Tier 4 the same non-determinism shows up as
+*which* patterns surface rather than as a number moving, because the model picks two or
+three from a larger set of true things.
+
+Consequence: a weekly review is not reproducible, and should not be presented as though it
+were. The planted trade-off appeared in 5/5 runs and is the signal; anything appearing in
+1/5 is a coin toss. If a pattern matters, it should be computed in `patterns.py` and handed
+to the model, not left for the model to notice.
+
+### Open, from the Fireworks workshop
+
+The hackathon's Fireworks session published an effort sweep on short-answer text benchmarks
+where Muse scores *worse* at high effort than at low. `perceive/classify.py` escalates
+`EFFORT_LADDER` on low confidence, assuming more effort helps. Those benchmarks are text,
+not screen classification, so this does not transfer — but it does mean the ladder is an
+assumption this project has never tested, and `probe.py` can test it.

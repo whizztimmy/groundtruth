@@ -59,6 +59,8 @@ what one would expect:
 - what the person's days actually begin with, where that is not what they would guess
 - a longest-focus figure that is small relative to the total in that same category
 
+**Two figures that cannot differ are one figure.** A category that happened on only \none day has a period total equal to that day's figure, so relating them looks like a \ncomparison and is not one. Before you state an observation, ask whether the figures you \nare relating could have come out differently from each other. If they could not, it is a \nrestatement wearing a comparison's clothes.
+
 If none of those hold — and with only a day or two of data, usually none will — return \
 no observations at all. Saying nothing is the correct output for thin data, and padding \
 it with restatement wastes the person's attention and teaches them to ignore you.
