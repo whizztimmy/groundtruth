@@ -62,6 +62,26 @@ const FIXTURE = normalise(fixture);
 /** The window the fixture covers, so fixture mode queries the day it actually has. */
 export const fixtureWindow = { from: FIXTURE.summary.from, to: FIXTURE.summary.to };
 
+/**
+ * Today, midnight to midnight in UTC, with an explicit offset because the server
+ * rejects a timestamp without one.
+ *
+ * UTC rather than the viewer's local day because events are stored and rendered in
+ * UTC throughout; mixing a local-day window into a UTC display would put a late
+ * evening session on the wrong side of the boundary.
+ *
+ * Computed per call, not once at module load, so a dashboard left open overnight
+ * rolls onto the new day at midnight instead of freezing on the day it was opened.
+ */
+export function todayWindow(now = new Date()): { from: string; to: string } {
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const end = new Date(start.getTime() + 86_400_000);
+  // slice rather than a regex: "+00:00" is spelled out, and there is nothing to
+  // escape wrong. toISOString always yields exactly 19 chars before the fraction.
+  const iso = (d: Date) => d.toISOString().slice(0, 19) + "+00:00";
+  return { from: iso(start), to: iso(end) };
+}
+
 async function getJson<T>(path: string, signal: AbortSignal): Promise<T> {
   const response = await fetch(url(path), { signal, headers: { accept: "application/json" } });
   if (!response.ok) throw new Error(`${path} responded ${response.status}`);
@@ -74,7 +94,10 @@ async function getJson<T>(path: string, signal: AbortSignal): Promise<T> {
  * to the fixture rather than rendering a half-real screen.
  */
 export async function fetchDay(window?: { from: string; to: string }): Promise<Day> {
-  const { from, to } = window ?? fixtureWindow;
+  // Today by default, not the fixture's day. The dashboard was built fixture-first,
+  // when there was no real data to open on; there is now, and a live tracker that
+  // opens on a date three days ago looks broken.
+  const { from, to } = window ?? todayWindow();
   const query = `from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
