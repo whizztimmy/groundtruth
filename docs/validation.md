@@ -184,6 +184,12 @@ the reduction is a privacy control that costs nothing in accuracy.
 
 ### Confidence drifts about 0.1 between identical runs
 
+> **Corrected 2026-10-31.** This section is wrong, and wrong in a way that mattered. The
+> 0.1 figure came from comparing a capture-resolution run against a downscaled one —
+> *different inputs* — so it never measured repeat variance at all. Measured properly, it
+> is 0.53 on an ambiguous image and the category flips. See the entry at the end of this
+> log. The consequences drawn below happen to survive; the number does not.
+
 The four crops are smaller than `TARGET_WIDTH`, so `--downscale` left them byte-identical
 — yet the radio crop moved 0.72 to 0.62 and the second moved 0.35 to 0.20, at temperature
 0. Reasoning models are not deterministic even with sampling disabled.
@@ -403,3 +409,75 @@ One evidence string captured `work.mercor.com/earnings with $10.77 total earning
 the documented limit of `redact.py` working as specified: it scrubs credentials, not
 personal data generally. The limit is pinned by a test, and this is what it looks like in
 practice on a real screen.
+
+## 2026-10-31 — How much does an identical input move on its own?
+
+The effort sweep raised a question it could not answer. Seven images through
+`EFFORT_LADDER`, one reading per cell, reported confidence rising on two and falling on
+three, with two categories flipping — which reads like evidence that escalating reasoning
+effort hurts. But the low-effort readings also disagreed with the 2026-10-29 table on the
+same images at the same effort, by far more than the 0.1 that entry claimed as the drift
+floor. Either something had changed, or the floor was wrong.
+
+**The floor was wrong.** Five repeats of one identical image, same effort, same backend,
+same width:
+
+| | a-x-feed (ambiguous) | b-substack (unambiguous) |
+|---|---|---|
+| run 1 | doomscrolling 0.62 | research 0.82 |
+| run 2 | uncertain 0.45 | research 0.88 |
+| run 3 | uncertain 0.45 | research 0.82 |
+| run 4 | doomscrolling 0.88 | research 0.88 |
+| run 5 | uncertain 0.35 | research 0.82 |
+| **spread** | **0.53** | **0.06** |
+
+### Variance is not a constant; it concentrates where the system is already unsure
+
+This is the finding, and it is more useful than a drift number. The unambiguous article is
+near-deterministic — 0.06 across five runs, category never in doubt. The ambiguous feed
+moves 0.53 and **flips category** between `doomscrolling` and `uncertain` on identical
+pixels.
+
+The evidence strings show the mechanism. On three of five runs the model demanded the
+motion signal:
+
+> no multi-second input or content-replacement measurements provided to confirm active
+> scrolling versus idle viewing
+
+On the two runs where it answered confidently it did not ask. Same image. So *whether the
+model decides it needs more evidence* is itself non-deterministic, and that decision is
+what moves the number.
+
+### What this retracts
+
+**The effort sweep proves nothing.** One reading per cell against per-cell noise of 0.53
+is coin-flipping. "Escalating made answers less confident more often than more confident"
+was not a finding, and neither were the two category flips it reported — those are inside
+the noise on exactly the kind of image that produced them. `EFFORT_LADDER` remains
+untested. Answering it properly needs repeats per cell, and the cheap version of that
+question is whether escalation reduces *variance* rather than whether it raises the mean.
+
+`probe.py` now reports within-image spread separately whenever `--repeat` is above one,
+and says that across-image comparisons are only meaningful where they exceed it. The tool
+previously pooled repeats into a single spread and concluded "the signal varies, so
+thresholds are meaningful" — which is true of the across-image comparison and false of
+the within-image one, from the same ten numbers.
+
+### What this vindicates
+
+Two decisions made for other reasons turn out to be load-bearing:
+
+- **Labels carry forward between classifications** rather than being recomputed every
+  sample. Without it, a stable activity would flip category every few samples.
+- **Session confidence is a duration-weighted mean**, not a last-value. A single 0.35
+  reading inside a confident block cannot drag the session.
+
+And one consequence for the product: `ACCEPT = 0.75` is not a threshold an ambiguous
+sample sits above or below, it is a threshold such a sample *crosses repeatedly*. The
+retry in `classify_verified` is therefore partly resampling noise rather than thinking
+harder — which may be the real reason it appears to work.
+
+**Open:** whether the uncertain queue should require a label to abstain twice before
+asking the user. On these numbers a single abstention is weak evidence of ambiguity, and
+asking a person about a sample that would have answered itself on the next poll is the
+most expensive mistake this system can make.

@@ -113,6 +113,28 @@ def report(results: list[Result]) -> None:
     for r in results:
         print(f"{r.name}: {r.evidence}")
 
+    # With repeats, the only honest first question is how much the same input moves on
+    # its own. Pooling repeats into one spread reports noise as signal, which is exactly
+    # the error the 2026-10-29 entry in docs/validation.md made.
+    repeats: dict[str, list[float]] = {}
+    for r in results:
+        repeats.setdefault(r.name, []).append(r.confidence)
+    if any(len(v) > 1 for v in repeats.values()):
+        print()
+        print("within-image spread across repeats of identical input:")
+        for name, values in repeats.items():
+            if len(values) < 2:
+                continue
+            span = max(values) - min(values)
+            cats = {r.category for r in results if r.name == name}
+            flip = f", category flipped between {sorted(cats)}" if len(cats) > 1 else ""
+            print(f"  {name}: {len(values)} runs, spread {span:.2f}{flip}")
+        print()
+        print(
+            "Any across-image comparison below is only meaningful where it exceeds "
+            "these numbers. A single reading per cell cannot."
+        )
+
     confidences = {round(r.confidence, 2) for r in results}
     print()
     if len(results) < 3:
