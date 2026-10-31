@@ -322,6 +322,11 @@ assumption this project has never tested, and `probe.py` can test it.
 
 ### SAM 3.1 is not reachable, so churn is measured locally
 
+> **Corrected 2026-10-31, later the same day.** "Not reachable" was wrong, and the
+> mistake was mine: I listed what the *Baseten* key served and never asked Meta's
+> own endpoint. `sam-3.1` is there. It is still not used, for a better reason —
+> see the entry at the end of this log. The frame differ stands on its own merits.
+
 Listing the models the Baseten key can reach returned 21, every one of them text —
 DeepSeek, GLM, Kimi, Nemotron, `muse-spark-open`. No segmentation model of any kind.
 Baseten's Model APIs are text inference; SAM would need a dedicated deployment on an
@@ -481,3 +486,83 @@ harder — which may be the real reason it appears to work.
 asking the user. On these numbers a single abstention is weak evidence of ambiguity, and
 asking a person about a sample that would have answered itself on the next poll is the
 most expensive mistake this system can make.
+
+## 2026-10-31 — Tier 3, and what the model catalogues actually serve
+
+### Ask the endpoint, not the documentation
+
+Listing `/models` on both endpoints took one request each and settled several questions
+that guesswork had got wrong.
+
+`inference.baseten.co/v1` serves 21 models, all text. No segmentation, no audio.
+
+`api.meta.ai/v1` serves nine: `muse-spark-1.1/1.2/1.3`, two `-contributor` variants,
+`muse-wonder-1.0`, `muse-image-1.0`, `muse-voice-transcribe-1.0`, and **`sam-3.1`**.
+
+### I was wrong about SAM, and the right answer is better
+
+The earlier entry said no SAM endpoint was reachable. I had checked Baseten and not Meta.
+`sam-3.1` is served, and a `/chat/completions` call says exactly where:
+
+> The model `sam-3.1` is not available on this endpoint. Use /v1/responses.
+
+So the SAM path could be wired. **It is still not going to be, and the reason is the
+architecture rather than the logistics.** `api.meta.ai` is a vendor-`managed` endpoint,
+and SAM is the one component that receives raw frames. Routing frames there is precisely
+what `PlacementViolation` exists to prevent. The only ways to do it are to weaken the
+invariant or to declare a vendor endpoint `self_hosted`, which would be a lie written
+into a config file.
+
+This is a better position than the one it replaces. "I could not find a host" is an
+excuse; "the host exists and the design refuses it" is the privacy claim actually costing
+something. The frame differ is no longer a fallback — it is the implementation that fits.
+
+### The voice model is in the catalogue and on none of the obvious routes
+
+`muse-voice-transcribe-1.0` exists in `/models`. Three attempts to reach it:
+
+| Attempt | Result |
+|---|---|
+| `/chat/completions` with an `input_audio` part | 404 `model_not_found` |
+| `/audio/transcriptions`, multipart | 404, empty body |
+| `/audio/translations`, multipart | 404, empty body |
+
+An empty 404 is a missing route; the chat endpoint's structured error is a route that
+exists and declined the model. Given `sam-3.1` turned out to live on `/v1/responses`,
+that is where to look next. Until then Tier 3 ships with typed check-ins, verified end to
+end, and `transcribe()` records what was tried in its own docstring.
+
+### Two bugs the live runs found, both mine
+
+**A category named after a venue.** The first taxonomy had `gym`, and `interpret` then
+refused "I went for a run" and "I was on a walk" — they had nowhere to go. A gym is a
+place; the category had to be the activity. Renamed to `fitness`, including in the fixture
+and its assertions, because one concept under two names is how a timeline becomes
+unreadable.
+
+**An inference path that never fired.** The prompt asked the model to estimate a duration
+when none was stated and record it at reduced confidence. Across five phrasings it never
+estimated once — it returned 0 every time and declined. That is better behaviour than the
+design asked for, so `INFERRED_CONFIDENCE` is gone and an unstated duration is now an
+explicit refusal with something to say back. A guessed number on somebody's timeline is
+one they will plan around.
+
+### What Tier 3 does
+
+Verified against `muse-spark-1.3`:
+
+| Check-in | Result |
+|---|---|
+| "at the gym for 45 minutes, lower body" | `fitness` / lower body at the gym, 45m, 0.97 |
+| "I went for a run, about 30 minutes" | `fitness` / run, 30m, 0.97 |
+| "reviewing a paper contract for about an hour" | `admin` / reviewing a paper contract, 60m |
+| "I just got back from the gym" | refused — no duration stated |
+| "twenty minutes reading API docs in Chrome" | refused — not off-screen time |
+| "ugh whatever" | refused — nothing in the taxonomy |
+
+The screen-work refusal is the one worth noting: that time is observed directly and does
+not need stating, and a tier that accepted it would double-count the day.
+
+**The agent never opens a microphone.** There is no capture path in the codebase, so Tier
+3 only runs when a person invokes it. That is a stronger control than a runtime check — a
+guard that permits background audio under conditions is one somebody eventually widens.

@@ -158,12 +158,50 @@ produced a different set of observations each time. The planted trade-off appear
 five; anything appearing once is a coin toss. If you demo this live, run it beforehand and
 be ready for a different answer.
 
+
+### Beat 5b — the hours a screen agent cannot see (2:40—2:55)
+
+```bash
+cd agent && ./.venv/Scripts/python.exe -m groundtruth.checkin --text "at the gym for 45 minutes, lower body"
+```
+
+```
+  fitness: lower body at the gym
+  17:33 to 18:18 (45 min, as stated)
+  confidence 0.97, 23 events
+```
+
+> "The gym, the commute, a walk — no amount of perception recovers those, and
+> they are the hours people most want back. So Tier 3 inverts it: I state the
+> activity and it is recorded at the confidence a stated fact deserves. It
+> backdates from now, because you check in on the way back to the desk."
+
+Then show it refusing, which is the better half:
+
+```bash
+cd agent && ./.venv/Scripts/python.exe -m groundtruth.checkin --text "I just got back from the gym"
+```
+
+```
+  not recorded: that did not say how long it was - try "at the gym for 45 minutes"
+```
+
+> "It will not guess a duration. Across five phrasings the model never once
+> estimated when nothing was said, so there is no inferred path at all — a
+> guessed number becomes a figure on your timeline that nobody uttered, and
+> you would plan around it."
+
+**Worth saying out loud:** the agent never opens a microphone. There is no listening
+path in the codebase at all, so Tier 3 happens only when you run that command.
+
 ### Beat 6 — what is not built (2:40–3:00)
 
-> "SAM 3.1 region tracking is implemented and unit-tested, and it has never processed a
-> real frame — I could not get a SAM endpoint, so what ships is a local frame differ that
-> measures whole-screen churn with no model at all. Voice check-in is not implemented.
-> Nothing mobile ships. The README says all of that."
+> "SAM 3.1 region tracking is implemented and unit-tested, and I am not using it.
+> `sam-3.1` is on the Meta API — but only as a managed endpoint, and frames are
+> the one thing that may not go to one. So what ships is a local frame differ with
+> no model at all. Audio transcription for check-ins is written, but I could not
+> find the endpoint that serves it, so check-ins are typed. Nothing mobile ships.
+> The README says all of that."
 
 Then the recovery, which is true and is the strongest note to end on:
 
@@ -177,10 +215,10 @@ Then the recovery, which is true and is the strongest note to end on:
 
 ## Traps
 
-**The fixture contains a gym session logged by voice from a phone.** Tier 3 is not
-implemented and there is no mobile client. The fixture was built to exercise the
-segmenter's device-handoff and idle-gap handling, not to demonstrate working features. If
-you show the fixture day, say it is seeded data. Do not point at the gym row.
+**The fixture's `fitness` session is seeded data from a phone device.** Tier 3 is now
+implemented, so you *can* demonstrate a check-in live — but there is still no mobile
+client, so the phone handoff in the fixture is illustrative. Say it is seeded data. The
+category was renamed from `gym` to `fitness` so the fixture and a live check-in agree.
 
 **Do not demo a single ambiguous sample and treat it as stable.** It may flip between takes.
 Demo confident samples live; demo abstention from the recorded calibration set.

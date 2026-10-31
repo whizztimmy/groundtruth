@@ -32,7 +32,7 @@ sample's coverage is visible rather than lost in the noise."""
 BY_CATEGORY = {
     "deep work": 8100.0,
     "doomscrolling": 7080.0,
-    "gym": 3300.0,
+    "fitness": 3300.0,
     "research": 3300.0,
     "admin": 1800.0,
     "devotion": 1680.0,
@@ -88,7 +88,7 @@ def test_the_day_derives_twelve_sessions(loaded):
     assert len(sessions) == 12
     assert [s["category"] for s in sessions] == [
         "devotion",
-        "gym",
+        "fitness",
         "deep work",
         UNCERTAIN,
         "research",
@@ -131,7 +131,7 @@ def test_the_voice_logged_gym_block_is_a_separate_device(loaded):
     """Off-screen time, on another machine, with no process to attribute it to."""
     sessions = window(loaded, "/sessions", device_id="phone-android-01")["sessions"]
     assert len(sessions) == 1
-    assert sessions[0]["category"] == "gym"
+    assert sessions[0]["category"] == "fitness"
     assert sessions[0]["duration_s"] == 3300.0
     assert sessions[0]["confidence"] == pytest.approx(0.97)
 

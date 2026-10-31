@@ -259,7 +259,7 @@ def test_off_screen_time_is_named_rather_than_dropped(client):
         client,
         run(
             range(1200, 1801, 60),
-            "gym",
+            "fitness",
             device="phone-android-01",
             process=None,
             tier=Tier.VOICE,

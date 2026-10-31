@@ -163,7 +163,7 @@ What is held, and for how long:
 | Frame digest (64x36 mean luminances) | In memory, one sample, overwritten | Never |
 | Derived region features (churn, persistence) | Discarded after classification | Never |
 | Activity label + confidence + timestamps | Persisted, credential-scrubbed | Only on explicit sync |
-| Voice audio | Discarded after transcription | Never |
+| Check-in audio | In memory for one call, never written | **Yes** — to a managed transcription endpoint |
 
 No frame is ever written to disk. This is enforced at the capture boundary rather than by
 convention, and `test_capture_writes_nothing_to_disk` checks it.
@@ -187,6 +187,10 @@ hashes out of legitimate evidence on every sample; nor personal data generally, 
 billing sentence that motivated the work is itself untouched. Both limits are pinned by
 tests in `tests/test_redact.py` so that nobody infers a wider guarantee than exists.
 
+**Check-in audio is the one thing that leaves for a managed endpoint.** The table above said voice audio never leaves the device; that was written before Tier 3 existed and it was wrong.
+
+The rule that actually holds is not "nothing leaves" but "nothing leaves that the person did not deliberately offer". A frame is captured passively and continuously and shows whatever happened to be on screen, including what somebody forgot was there; it can never satisfy that test, which is why `vision()` refuses. A check-in is a sentence somebody chose to say, knowing it was recorded and why, so it satisfies the test by construction. The enforcement is architectural rather than a runtime check: there is no microphone capture path anywhere in this project, so Tier 3 can only happen when a person runs `groundtruth.checkin` against audio they recorded themselves.
+
 **The motion signal is computed locally.** `perceive/framediff.py` reduces a frame to a
 64x36 grid of mean luminances and compares it with the previous sample's grid, which gives
 whole-screen churn with no model, no network and no GPU. The digest is 2,304 bytes and is
@@ -194,8 +198,11 @@ the only thing a sample leaves behind, so the single-buffer invariant above stil
 there is never a second frame in memory.
 
 This stands in for the SAM 3.1 path in `perceive/regions.py`, which is implemented and
-unit-tested but has never processed a real frame, because no SAM endpoint is reachable
-with this project's credentials and there is no local GPU. The substitute is weaker — it
+unit-tested but has never processed a real frame. Not for want of a host: `sam-3.1`
+**is** served on the Meta Model API, via `/v1/responses`. It is declined because that is a
+`managed` endpoint and SAM receives frames, so routing to it is precisely what the placement
+invariant exists to refuse. Taking it would mean either weakening the invariant or
+declaring a vendor endpoint `self_hosted`, which would be a lie in a config file. The substitute is weaker — it
 cannot attribute churn to a named region, so a video in a corner and a full-window feed
 read alike — and stronger on privacy, since no pixels or derived features leave the
 machine at all. When a SAM endpoint lands, `regions.py` supersedes it and

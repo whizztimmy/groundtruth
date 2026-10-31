@@ -66,7 +66,7 @@ GroundTruth only climbs when the rung below is genuinely ambiguous.
 |------|--------|------|-----------|--------|
 | 1 | Foreground window + process name | Free | Always | **Running** |
 | 2 | Screen frame + local motion signal, classified by **Muse Spark Open** | Rented GPU | Tier 1 is ambiguous (e.g. a browser) | **Running** |
-| 3 | Voice check-in via **Muse Voice Transcribe** | Remote, rare | Off-screen time — gym, devotion, travel | **Not implemented** |
+| 3 | Check-in you state yourself, interpreted by **Muse Spark** | Remote, rare | Off-screen time — the gym, a commute, a walk | **Running** (typed; audio transcription unverified) |
 | 4 | Weekly synthesis via **Muse Spark** on the Meta Model API | Remote, weekly | On request | **Running** |
 
 Photoshop is unambiguous; a browser never is. A process-name table resolves the
@@ -98,14 +98,21 @@ luminances and compared against the previous sample's grid. No model, no network
 leaves the machine. Only the 2,304-byte digest outlives a sample, never a second frame, so
 the single-buffer capture invariant holds.
 
-**What is written but not provisioned** is the SAM 3.1 path. `perceive/regions.py` uses
+**What is written but deliberately not used** is the SAM 3.1 path. `perceive/regions.py` uses
 SAM 3.1's object multiplexing (up to 16 objects per forward pass) to track named screen
 regions — editor, terminal, feed, video player — so churn can be attributed to *which*
 region moved, which the whole-screen measurement cannot do. It is implemented and
-unit-tested against synthetic detections, and it has never processed a real frame: no SAM
-endpoint is reachable with the credentials this project has, and there is no local GPU to
-serve it on. One function, `_parse_detections`, is written against documentation rather
-than a live endpoint and is contained for exactly that reason.
+unit-tested against synthetic detections, and it has never processed a real frame.
+
+That is a choice, not a shortage. `sam-3.1` **is** served on the Meta Model API, via
+`/v1/responses`. But that is a vendor-`managed` endpoint, and SAM is the one component
+that receives raw frames — so routing to it is exactly what the placement invariant above
+exists to refuse. Using it would mean either weakening the invariant or declaring a
+vendor endpoint `self_hosted`, which would be a lie in a config file. The privacy claim
+costs something here, and this is what it costs.
+
+One function, `_parse_detections`, is written against documentation rather than a live
+endpoint and is contained for exactly that reason.
 
 The honest summary: the cheap signal answers the question the model was asking. The SAM
 path would answer it better, and is not currently running.
@@ -119,8 +126,13 @@ path would answer it better, and is not currently running.
 | **Muse Spark Open** (`muse-spark-open-1026`) | Tier 2 activity classification and session labelling | `self_hosted` — open weights on rented infrastructure |
 | **Muse Spark 1.3** (Meta Model API) | Tier 4 weekly synthesis and pattern reasoning | `managed` — receives category names and durations, never a frame, title or transcript |
 
-**Integrated, not provisioned:** SAM 3.1 for multiplexed region tracking, and Muse Voice
-Transcribe for off-screen capture.
+**Deliberately unused:** SAM 3.1, which is available on the Meta Model API but only as a
+managed endpoint, and frames may not go to one. See above.
+
+**Written, unverified:** `muse-voice-transcribe-1.0` appears in the model catalogue but was
+not reachable on `/chat/completions`, `/audio/transcriptions` or `/audio/translations`.
+Tier 3 therefore ships with typed check-ins, which are verified end to end; the audio
+leg is one function away whenever the right surface is found.
 
 ## Platforms
 
@@ -170,6 +182,10 @@ cd agent && ./.venv/Scripts/python.exe check_api.py
 
 ```bash
 cd agent && TIER2_ENABLED=1 ./.venv/Scripts/python.exe -m groundtruth.main
+```
+
+```bash
+cd agent && ./.venv/Scripts/python.exe -m groundtruth.checkin --text "at the gym for 45 minutes"
 ```
 
 Tier 2 opts in rather than out. Leave `TIER2_ENABLED` unset and the agent captures no
