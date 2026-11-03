@@ -2,6 +2,14 @@
 
 **Your phone says "Chrome: 4 hours." GroundTruth says what those four hours actually were.**
 
+**[See it running → whizztimmy.github.io/groundtruth](https://whizztimmy.github.io/groundtruth/)**
+
+That link shows a sample day, and says so: the header badge reads `sample day` rather
+than `live`. There is no server behind it on purpose. The sync server binds to
+loopback, has no authentication, and its events carry descriptions of whatever was on
+screen — so the version with real data only ever runs on the operator's own machine.
+That is not a deployment gap; it is the product.
+
 Every activity tracker ever built classifies your time by *application name*. So Chrome is
 "productive" whether you were reading API docs or three hours deep in a feed. VS Code is
 "coding" whether you were shipping or staring at a file you opened an hour ago. The
@@ -155,8 +163,8 @@ restriction does not exist.
 
 | Part | Contents | Tests |
 |------|----------|-------|
-| `agent/` | Capture, escalation, perception, classification, buffer, sync, weekly review | 229 |
-| `server/` | Event ingest, idempotent on `(device_id, ts)`, session segmentation, derivation | 126 |
+| `agent/` | Capture, escalation, perception, classification, buffer, sync, weekly review | 250 |
+| `server/` | Event ingest, idempotent on `(device_id, ts)`, session segmentation, derivation | 144 |
 | `web/` | Dashboard: day timeline, the contrast view, the uncertain queue | — |
 | `scripts/` | Pre-commit credential scanner | 35 |
 

@@ -25,10 +25,10 @@ sample --> tier 1 --> ambiguous? --no--> emit event
               |          yes                 |
               |           v                  |
               |       tier 2                 |
-              |   SAM 3.1 regions            |
+              |   frame diff -> churn        |
               |           |                  |
               |           v                  |
-              |   Muse Glimmer               |
+              |   Muse Spark Open            |
               |   classify + confidence      |
               |           |                  |
               |      confident? --no--> retry (bounded)
@@ -260,12 +260,12 @@ time in the query layer, not at write time.
 | Tier | Where it runs | Marginal cost |
 |------|--------------|---------------|
 | 1 | Local, no model | 0 |
-| 2 | Muse Glimmer, local GPU or partner inference | GPU-seconds only |
-| 3 | Muse Voice Transcribe | Per check-in, user-initiated |
+| 2 | Muse Spark Open, rented or local GPU | Per call; local churn is free |
+| 3 | Muse Spark, interpreting a typed or spoken check-in | Per check-in, user-initiated |
 | Weekly synthesis | Muse Spark / Wonder | Once per week |
 
-Glimmer at 4-bit fits under ~20GB and targets a single consumer GPU. On machines without
-one, the same model is served through partner inference behind an identical interface, so
+Muse Spark Open is served through partner inference here, behind the same interface a
+local deployment would use, so
 the deployment target is a config change rather than a code path.
 
 ## Deliberately out of scope
