@@ -168,3 +168,116 @@ A second post, if the first lands:
 
 Remember the Most Viral prize needs the post link submitted through the platform, not
 just posted.
+
+---
+
+# Field by field
+
+The form as it actually appears. Fields marked * are required.
+
+## Team Name *
+
+> GroundTruth
+
+Same as the project. A solo entry does not need a separate team identity, and one name
+is one less thing for a judge to reconcile.
+
+## Track *
+
+**Indie Developer Track**
+
+## Which problem statement? *
+
+**Build for Your World**
+
+This is a tool built to answer a question about its author's own days - devotion time,
+gym, doomscrolling, coding - on the author's own machine, with the privacy constraint
+that follows from it being personal. That is squarely the first statement. "Push the
+Frontier" invites comparison against research entries on novelty alone, which is not
+where this is strongest; its strength is that it works, is honest about what it does not
+do, and is built on an argument.
+
+## Public GitHub Repository *
+
+> https://github.com/whizztimmy/groundtruth
+
+## 3-Minute Demo Video *
+
+Paste after upload. Test the link in a private window first - an unlisted video that is
+actually private is the most common way to lose a demo score.
+
+## Project Description *
+
+Use the full description above. If the box is short, use the ~50-word version.
+
+## Describe your use of Meta products *
+
+Use the "How it uses Meta AI tooling" section above.
+
+## Why are Meta's models important to your solution? *
+
+> Because the central claim is only credible if the weights are open.
+>
+> A tracker that understands your screen is acceptable only if that understanding never
+> reaches anyone who could keep it. That is a property of where a model can run, not of a
+> policy page. Muse Spark Open runs on a rented GPU today and on the user's own hardware
+> with a config change, so the agent can enforce "a frame never reaches a vendor-managed
+> endpoint" as an exception that raises rather than a promise in a README.
+>
+> The division of labour depends on it too. Open weights see the pixels; the managed Meta
+> Model API sees only category names and pre-computed durations for the weekly review, and
+> never a frame, a window title or a transcript. That split is only available because one
+> of the two models is open.
+>
+> It cost something, which is how you know it is real. SAM 3.1 would give better attention
+> tracking than what ships, and it is served on the Meta Model API - but only as a managed
+> endpoint, and frames are the one thing that may not go to one. It is implemented, tested
+> and deliberately unused. A closed-weights stack would have made this project's argument
+> unmakeable rather than merely expensive.
+
+## Partner technologies feedback (Baseten)
+
+> Baseten served Muse Spark Open for Tier 2. The OpenAI-compatible surface meant the tier
+> needed configuration and no code - the transport already spoke it.
+>
+> One thing worth documenting on the model page: Muse Spark Open reasons before it
+> answers, so a tight max_tokens returns null content with finish_reason "length" rather
+> than an error. The first failure read as a parser bug and pointed away from the cause.
+> The fix was mechanical once understood - detect truncation-before-answer and retry with
+> a doubled budget - but a line in the docs would have saved an hour.
+>
+> GET /v1/models was accurate and genuinely useful: listing what a key could actually
+> reach settled two questions that guesswork had got wrong.
+
+## Survey questions
+
+These are opinions, so they are yours rather than mine. What follows is what this project
+actually encountered, which is the only honest basis for answering.
+
+**Biggest obstacle: Finding clear documentation or code examples.**
+
+Both non-text models appear in /models but are not on /chat/completions. sam-3.1 returned
+a genuinely helpful error naming /v1/responses. muse-voice-transcribe-1.0 returned a bare
+model_not_found, and /audio/transcriptions and /audio/translations did not exist, so the
+audio leg of Tier 3 shipped unverified. If a "please specify" box is offered, that is the
+specific, and it is useful feedback rather than a complaint.
+
+**What matters most when choosing a model: Open weights or self-hosting.**
+
+True here in the strongest sense: the project does not exist without it.
+
+**Compared with other models:** answer from your own experience, or pick "We haven't used
+other models for this kind of work" if that is the truth. Do not guess a comparison.
+
+**Muse Code recommendation:** leave blank. This project did not use it, and a rating
+without use is noise in someone's data.
+
+**Production blocker:** "Not available in our country or region" or "Nothing would stop
+us" - whichever is true for you. The honest one for this architecture is that Tier 2 would
+move on-device, so the Meta Model API would carry only the weekly review.
+
+## Consent checkbox
+
+Required, and it is a real grant: Meta and Cerebral Valley may publish and promote what
+you submit. The repository is already public and the demo shows a sample day, so there is
+nothing here you have not already chosen to show - but read it rather than tick past it.
