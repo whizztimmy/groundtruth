@@ -41,7 +41,20 @@ export function useDay() {
     if (!silent) setState({ status: "loading" });
     fetchDay()
       .then((day) => {
-        if (!cancelled) setState({ status: "ready", day });
+        if (cancelled) return;
+        setState((current) => {
+          // A background refresh must never downgrade a live day to the bundled
+          // sample. fetchDay does not reject on failure, it resolves with the fixture,
+          // so the catch below never sees a failed poll. Without this guard a single
+          // slow response replaces real data with the sample day and the provenance
+          // badge flips between "live" and "sample day" while somebody is watching.
+          const downgrade =
+            silent &&
+            day.provenance.kind === "fixture" &&
+            current.status === "ready" &&
+            current.day.provenance.kind === "server";
+          return downgrade ? current : { status: "ready", day };
+        });
       })
       .catch((error: unknown) => {
         if (cancelled) return;

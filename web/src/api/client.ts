@@ -36,7 +36,10 @@ const BASE = (import.meta.env.VITE_GROUNDTRUTH_SERVER ?? "").replace(/\/$/, "");
 const url = (path: string) => `${BASE}${path}`;
 
 /** How long to wait for a local server before falling back to the fixture. */
-const TIMEOUT_MS = 2500;
+const TIMEOUT_MS = 6000;
+// Three requests go out in parallel, and the machine running this dashboard is often
+// also capturing frames and waiting on inference. 2.5s was tight enough that ordinary
+// load produced aborts, and an aborted poll looks exactly like an absent server.
 
 /**
  * Accepts either shape of fixture: this repo's generated `web/src/data/day.json`
