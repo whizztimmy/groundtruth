@@ -99,7 +99,7 @@ transcription for check-ins is written but its endpoint could not be found, so c
 are typed; nothing mobile ships. docs/validation.md records what was tested and what it
 showed, including the results that contradicted the design.
 
-475 tests across three suites: 296 agent, 144 server, 35 for a pre-commit credential
+483 tests across three suites: 296 agent, 152 server, 35 for a pre-commit credential
 scanner.
 ```
 
@@ -186,6 +186,47 @@ settled two questions that guesswork had got wrong.
 ```
 
 ---
+
+## What comes next
+
+Use this if a field asks, and keep the first two if space is short. Ranked by how much
+each would change what the product can say, not by effort.
+
+```
+SAM 3.1 on hardware the operator controls. The biggest single upgrade, and already
+written and tested. Per-region churn says which part of the screen moved, which a
+whole-screen measurement cannot. A live run showed the cost of that gap directly: the
+model saw a static page, the measurement reported movement it could not localise, and it
+abstained rather than guess. Region tracking converts that class of abstention into an
+answer, and it does so without weakening the placement rule, because a self-hosted
+deployment is one the rule already permits.
+
+Audio check-ins, once the model is served. muse-voice-transcribe-1.0 is in the model
+catalogue and reachable on no surface tested: not /chat/completions, not
+/audio/transcriptions, not /audio/translations, not /v1/responses. The /v1/files upload
+returns 200 with a usable id and the input_audio content shape passes validation, so the
+request is correct and the model is simply not there. One function changes when it lands.
+
+Android, where UsageStatsManager makes the cross-device story tractable. iOS stays
+constrained by DeviceActivityReport rendering inside a sandboxed extension, so the plan
+there is Shortcuts automations and voice check-ins rather than pretending the restriction
+is negotiable.
+
+A variance-aware test of the reasoning ladder. classify_verified escalates effort on low
+confidence and nobody has established that this helps. A first attempt looked like
+evidence that it hurts and was retracted: one reading per cell against per-cell noise of
+0.53 is coin-flipping. The real question is whether escalation reduces variance rather
+than raises the mean.
+
+Inference moved on-device. The open weights already make this a configuration change
+rather than a rewrite, which is the entire argument for choosing them.
+
+A week of continuous use. Every significant bug here came from running it rather than
+testing it: a classifier silently replaced by a stub, a category named after a venue that
+made the system refuse "I went for a run", an inference path the model never once took,
+and a carry-forward that quietly reinstated the bug a new gate had just been built to fix.
+483 tests found none of them.
+```
 
 ## Survey questions
 
