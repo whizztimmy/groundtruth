@@ -110,3 +110,45 @@ question those tools were never asking.
 > Every tracker ever built answers "were your hands moving?" and lets you read it as
 > "were you working?". GroundTruth reads the screen instead, tells you when it cannot
 > tell, and never shows anyone else.
+
+---
+
+## What comes next
+
+Ranked by how much each would change what the product can say, not by how hard it is.
+
+**SAM 3.1 on hardware the operator controls.** The biggest single upgrade, and it is
+already written and tested. Per-region churn would say *which* part of the screen moved,
+which whole-screen measurement cannot. A live run showed the cost of that gap directly:
+the model saw a static page, the measurement reported movement it could not localise, and
+it abstained rather than guess. Region tracking converts that class of abstention into an
+answer, and it does it without weakening the placement rule, because the deployment would
+be self-hosted rather than managed.
+
+**Audio check-ins, once the model is served.** `muse-voice-transcribe-1.0` is in the model
+catalogue and reachable on no surface tested: not `/chat/completions`, not
+`/audio/transcriptions`, not `/audio/translations`, and not `/v1/responses`. The file
+upload succeeds and the content shape validates, so the request is correct and the model
+simply is not there. One function changes when it appears.
+
+**Android.** `UsageStatsManager` makes this genuinely tractable and it is the cross-device
+story the project does not yet deliver. iOS stays constrained by `DeviceActivityReport`
+rendering inside a sandboxed extension, so the plan there is Shortcuts automations and
+check-ins rather than pretending the restriction is negotiable.
+
+**A variance-aware test of the reasoning ladder.** `classify_verified` escalates effort on
+low confidence and nobody has established that this helps. A first attempt looked like
+evidence that it hurts, and was retracted: one reading per cell against per-cell noise of
+0.53 is coin-flipping. The real question is whether escalation reduces *variance* rather
+than raises the mean, which needs repeats per cell.
+
+**Inference moved on-device.** The open weights already make this a configuration change
+rather than a rewrite, which is the whole argument for choosing them. Doing it would
+close the last gap between what the architecture permits and what this deployment does.
+
+**A week of continuous use.** Every significant bug in this project came from running it
+rather than testing it: a classifier silently replaced by a stub, a category named after a
+venue that made the system refuse "I went for a run", an inference path the model never
+once took, and a carry-forward that quietly reinstated the bug a new gate had just been
+built to fix. 475 tests found none of them. A week of real use will find the next four,
+and they will be more interesting than anything either of us would think to build.

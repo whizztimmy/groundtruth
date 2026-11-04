@@ -122,7 +122,10 @@ def build_prompt(
             # overrules perception.
             lines.append(
                 "This was measured across the whole screen rather than per region, "
-                "so it cannot attribute the movement to one part of the display."
+                "so it cannot attribute the movement to one part of the display. "
+                "Where it disagrees with what you can see, trust the image: describe "
+                "what the screen shows and note the discrepancy. Do not answer "
+                "uncertain solely because this measurement and the frame conflict."
             )
 
     if examples:

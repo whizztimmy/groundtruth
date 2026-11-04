@@ -193,6 +193,12 @@ async def transcribe(backend: Backend, audio: bytes, *, fmt: str) -> str:
     — `/chat/completions` with an `input_audio` content part: 404 `model_not_found`
     — `/audio/transcriptions` (the Whisper-style multipart shape): 404, empty body
     — `/audio/translations`: 404, empty body
+    — `/v1/files` upload: **200**, returning a usable file id
+    — `/v1/responses` with a correctly shaped `input_audio` part: 404 `model_not_found`
+
+    That last line is the useful one, added after a second attempt. The upload succeeds and
+    the content shape passes validation, so the request is right and the model is simply
+    not served on any surface this found. It is in the catalogue and reachable nowhere.
 
     An empty 404 is a missing route, while the chat endpoint returned a structured error
     about the model — so the model is in the catalogue and is served somewhere this did

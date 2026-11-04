@@ -22,6 +22,7 @@ from .models import (
     UNCERTAIN,
     FewShotExample,
     Resolution,
+    Tier,
     evidence_summary,
 )
 from .segment import (
@@ -169,6 +170,39 @@ def full_range(store: EventStore) -> tuple[datetime, datetime] | None:
     return (lo, hi)
 
 
+MIN_ABSTENTIONS = 2
+"""Model abstentions a span needs before it is worth interrupting somebody over.
+
+One is weak evidence. Repeat runs of an identical ambiguous screenshot span a 0.53
+confidence range and change category (see `docs/validation.md`), so a single `uncertain`
+is as likely to be the dice as a genuinely unreadable screen, and the next poll would
+often have answered it unaided.
+
+Counted over tier 2 events only. A span is mostly tier 1 carry-forward, which repeats the
+same abstention rather than making a new one, and counting those would let one shrug
+become a dozen.
+"""
+
+ASK_ANYWAY_S = 300.0
+"""Past this, ask even on a single abstention.
+
+Five unexplained minutes is worth a question whatever the confidence arithmetic says. The
+rule above exists to stop noise reaching the user, not to hide real gaps from them.
+"""
+
+
+def worth_asking(span: Span) -> bool:
+    """Whether an uncertain span earns a place in the queue.
+
+    The queue is the one place this product spends the user's attention, so it has to be
+    the scarcest thing in it. A queue full of questions that would have answered
+    themselves teaches people to ignore it, and then the honest abstention that mattered
+    goes unread with the rest.
+    """
+    abstentions = sum(1 for c in span.coverage if c.event.tier is Tier.SCREEN)
+    return abstentions >= MIN_ABSTENTIONS or span.duration_s >= ASK_ANYWAY_S
+
+
 def derive_uncertain(store: EventStore, config: SegmentConfig) -> list[UncertainView]:
     """Every unresolved uncertain span, newest first."""
     window = full_range(store)
@@ -186,7 +220,7 @@ def derive_uncertain(store: EventStore, config: SegmentConfig) -> list[Uncertain
             suggestions=suggest_categories(store, spans, index),
         )
         for index, span in enumerate(spans)
-        if span.is_uncertain
+        if span.is_uncertain and worth_asking(span)
     ]
     views.sort(key=lambda view: view.start_ts, reverse=True)
     return views
