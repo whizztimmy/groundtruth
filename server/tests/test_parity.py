@@ -2,7 +2,7 @@
 
 The two packages share contracts by convention rather than by import, for the reason stated
 in `models.py`: the agent's dependencies do not belong on a sync host. Convention without a
-check is drift, and drift here is expensive in a specific way — the agent would keep sending
+check is drift, and drift here is expensive in a specific way - the agent would keep sending
 events the server kept accepting, and the field that stopped lining up would surface as a
 wrong number on a dashboard rather than as an error anywhere.
 
@@ -30,7 +30,7 @@ def load_agent_types() -> ModuleType:
     """Load the agent's contract module directly from its file.
 
     Loaded by path because importing `groundtruth.types` would import the agent package,
-    which pulls in `mss` and `pywin32` — neither of which installs on a sync host, and
+    which pulls in `mss` and `pywin32` - neither of which installs on a sync host, and
     neither of which this test needs.
     """
     spec = importlib.util.spec_from_file_location("agent_types", AGENT_TYPES)

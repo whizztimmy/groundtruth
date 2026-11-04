@@ -1,7 +1,7 @@
 """Tests for the five endpoints of `docs/API.md`.
 
 Driven through `TestClient` against a real store on disk, so what is tested is the
-serialisation a dashboard will actually receive — a test that asserted on the handler's
+serialisation a dashboard will actually receive - a test that asserted on the handler's
 return value would pass happily while the JSON said something else.
 """
 
@@ -108,7 +108,7 @@ def test_no_endpoint_accepts_an_image(client):
 
     Asserted against the generated schema rather than by attempting an upload, so adding
     such an endpoint fails the suite instead of merely being reachable. Every request body
-    the server declares has to be JSON — a binary or multipart body is the shape a frame
+    the server declares has to be JSON - a binary or multipart body is the shape a frame
     would have to arrive in.
     """
     schema = client.get("/openapi.json").json()
@@ -366,7 +366,7 @@ def uncertain_day(client):
 
 
 def test_resolving_returns_the_re_segmented_session(client, uncertain_day):
-    """The answer is not stored and echoed — it is re-derived, which is why it merges.
+    """The answer is not stored and echoed - it is re-derived, which is why it merges.
 
     Three sessions become one, because with the question answered that is what the day was.
     """

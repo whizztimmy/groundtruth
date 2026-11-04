@@ -21,7 +21,7 @@ const POLL_MS = 30_000;
 /**
  * Loads the day, keeps it current while you watch, and owns the only mutation the
  * dashboard performs: answering an uncertain span. A resolved span leaves the queue
- * and becomes a session, which is what the server does too — the server re-segments
+ * and becomes a session, which is what the server does too - the server re-segments
  * and returns that session, so applying it locally keeps the three views consistent
  * without a refetch.
  *

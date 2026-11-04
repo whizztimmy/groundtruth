@@ -3,7 +3,7 @@
 `order_events` already prefers a higher tier when two events share an instant. This covers
 the other case, which the first live check-in exposed: a check-in claims a *stretch*, and
 without this rule a backdated gym session overlapping a few minutes of desktop sampling
-derived as `deep work, uncertain, fitness, uncertain, deep work` — five sessions, three of
+derived as `deep work, uncertain, fitness, uncertain, deep work` - five sessions, three of
 them zero seconds, thrashing between two contradictory claims about the same minutes.
 
 The rule is physical, not statistical: you cannot be at the gym and at this desk. The

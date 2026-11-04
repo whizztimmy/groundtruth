@@ -1,4 +1,4 @@
-"""Tests for churn — the measurement the product's central claim rests on.
+"""Tests for churn - the measurement the product's central claim rests on.
 
 If reading and scrolling are not separable here, the project is an app-name tracker with
 extra steps. These tests encode what that separation has to look like.

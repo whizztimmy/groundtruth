@@ -2,17 +2,17 @@
 
 The capture invariant is about *pixels*: no frame, mask or pixel-derived feature is
 written to disk. A description of a frame is not a pixel, and `buffer.py` persists two
-strings the model wrote while looking at a screen — `label` and `evidence` — which then
+strings the model wrote while looking at a screen - `label` and `evidence` - which then
 sync to the server. So the invariant held while the thing it was protecting against
 walked out through a different door.
 
 This is not hypothetical. `docs/validation.md` records the classifier reading a billing
-page back as "$0.00, free credits $150.00, Visa" — verbatim, unprompted. The 1024px
+page back as "$0.00, free credits $150.00, Visa" - verbatim, unprompted. The 1024px
 downscale in `capture/screen.py` thins fine body text but does not remove it, and a key
 pasted at a terminal prompt is rendered in a monospace face large enough to survive.
 
 What this does *not* claim to do is make the agent safe to run over a password manager.
-It catches credentials that announce themselves — a reserved vendor prefix, or a value
+It catches credentials that announce themselves - a reserved vendor prefix, or a value
 sitting after a name like `API_KEY=`. A bare high-entropy string with no prefix and no
 label is left alone, deliberately: see `SECRET_ASSIGNMENT` below for why widening that
 costs more than it buys.
@@ -53,7 +53,7 @@ VENDOR_TOKENS = re.compile(
 #
 # Only the value is replaced; the name is kept. "terminal showing GLIMMER_API_KEY=
 # [redacted credential]" is better evidence than "terminal showing [redacted credential]"
-# — it still tells the user what they were looking at, which is the entire job of the
+# - it still tells the user what they were looking at, which is the entire job of the
 # evidence field.
 #
 # Unlike `scripts/scan_secrets.py` this has no placeholder exemption, and the asymmetry

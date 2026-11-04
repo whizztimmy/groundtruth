@@ -2,7 +2,7 @@
 
 The guard is the one place where the project's privacy claim is enforced in code rather
 than asserted in a README. If these tests pass and the guard is later weakened, the claim
-in `README.md` becomes false — so treat a failure here as a product bug, not a test bug.
+in `README.md` becomes false - so treat a failure here as a product bug, not a test bug.
 """
 
 import pytest
@@ -173,7 +173,7 @@ class TestReasoningModelResponses:
     """Muse Spark Open reasons before it answers.
 
     A tight max_tokens makes it spend the whole budget thinking and return null content,
-    which previously surfaced as "unexpected content type: NoneType" — an error that
+    which previously surfaced as "unexpected content type: NoneType" - an error that
     points at the parser rather than at the real cause, and sent a debugging session
     after the wrong thing.
     """

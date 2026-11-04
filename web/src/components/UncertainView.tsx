@@ -17,7 +17,7 @@ interface Props {
  * The uncertain queue.
  *
  * This is not an error list. A classifier that returns `uncertain` instead of a
- * plausible guess is behaving correctly — the architecture has no ground-truth
+ * plausible guess is behaving correctly - the architecture has no ground-truth
  * label set to validate against, so the system is built to commit to answers it
  * can be held to and to ask about the rest. Answering a span stores it as a
  * few-shot example for that process, which is how the taxonomy converges on one
@@ -55,7 +55,7 @@ export function UncertainView({ day, onResolved, onBrowse }: Props) {
               <span className="tnum">{duration(unansweredTotal)}</span> of this day is held as a question
               instead of a guess. Most trackers would have assigned it something plausible and never
               mentioned it. Answering one is a single click, and the answer becomes a few-shot example for
-              that application — so the same ambiguity resolves itself next time.
+              that application - so the same ambiguity resolves itself next time.
             </>
           )}
         </p>
@@ -102,7 +102,7 @@ function SpanCard({
   /**
    * One click is the whole interaction: the chosen category is the answer, and the
    * label defaults to that category unless a more specific one was typed. The
-   * contract wants both fields, and a category is a truthful label — so requiring
+   * contract wants both fields, and a category is a truthful label - so requiring
    * the user to compose a phrase before they can answer would be ceremony.
    */
   const answer = async (category: string) => {
@@ -219,7 +219,7 @@ function SpanCard({
 
         {state.phase === "failed" && (
           <p className="uncCard__error" role="alert">
-            {state.message} — nothing was stored, so the span is still open.
+            {state.message} - nothing was stored, so the span is still open.
           </p>
         )}
       </div>

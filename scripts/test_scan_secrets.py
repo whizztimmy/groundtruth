@@ -1,6 +1,6 @@
 """Tests for the secret scanner.
 
-Every fixture here is synthetic — repeated characters and obvious filler — because a test
+Every fixture here is synthetic - repeated characters and obvious filler - because a test
 suite containing a realistic credential has recreated the problem it is testing for. The
 patterns match on shape, so filler exercises them exactly as a real value would.
 
@@ -29,7 +29,7 @@ def synth(prefix: str, length: int = 28, fill: str = "A") -> str:
     """Build a token-shaped string at call time.
 
     Assembled rather than written as a literal so this file contains no string that the
-    scanner would match. The alternative — adding this path to the scanner's skip list —
+    scanner would match. The alternative - adding this path to the scanner's skip list -
     would carve a hole in the safeguard exactly where someone might hide something, and a
     test suite the scanner refuses to read is a test suite that stops protecting anything.
     """

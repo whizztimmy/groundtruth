@@ -118,7 +118,7 @@ class SyncClient:
     async def flush_once(self) -> SyncResult:
         """Send at most one batch.
 
-        Returns a zero result when there is nothing pending — callers treat that as
+        Returns a zero result when there is nothing pending - callers treat that as
         success, not as a failed send.
         """
         batch = self._buffer.take(self._batch_size)

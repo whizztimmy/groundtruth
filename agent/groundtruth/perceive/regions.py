@@ -14,12 +14,12 @@ Frames live in memory only. Nothing here writes an image to disk.
 
 `_parse_detections` is the one function in this project written against documentation
 rather than against a running endpoint, because SAM 3.1 serving was not yet provisioned
-when it was written. It therefore accepts several plausible shapes — RLE, polygon, raw
-mask, bare box — rather than committing to one.
+when it was written. It therefore accepts several plausible shapes - RLE, polygon, raw
+mask, bare box - rather than committing to one.
 
 That is deliberate containment, not indecision: when a real endpoint lands, exactly one
 function needs to change, and every test above it still holds. Everything else in this
-module — tracking, grid reduction, churn, attention ranking — is verified against
+module - tracking, grid reduction, churn, attention ranking - is verified against
 synthetic detections and does not depend on the wire format at all.
 """
 
@@ -153,8 +153,8 @@ class RegionTracker:
 def _to_grid(det: dict[str, Any], *, width: int, height: int) -> grid.Grid:
     """Best available occupancy for one detection.
 
-    Prefers a real mask; falls back to the bounding box. The fallback is much weaker —
-    a feed scrolling inside a fixed box registers no churn at all — so it is logged.
+    Prefers a real mask; falls back to the bounding box. The fallback is much weaker -
+    a feed scrolling inside a fixed box registers no churn at all - so it is logged.
     """
     points = det.get("points")
     if points:
@@ -269,7 +269,7 @@ def _decode_polygon(
     """Polygon vertices to the cells its bounding extent covers.
 
     Deliberately not a scanline fill. Churn is computed on a 64x36 grid, so filling the
-    exact interior would be discarded almost entirely by the reduction — the vertices
+    exact interior would be discarded almost entirely by the reduction - the vertices
     already determine which cells light up.
     """
     flat = polygon[0] if polygon and isinstance(polygon[0], list) else polygon
@@ -308,7 +308,7 @@ def _decode_png_mask(
 def attention_locus(regions: tuple[Region, ...]) -> Region | None:
     """The region most likely holding attention.
 
-    Focus alone is insufficient — the focused window is often not where the eyes are,
+    Focus alone is insufficient - the focused window is often not where the eyes are,
     which is the two-monitor case every existing tracker gets wrong. Ranks by focus
     first, then area, then inverse churn, so a large stable region beats a small
     flickering one.

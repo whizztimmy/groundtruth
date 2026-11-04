@@ -66,7 +66,7 @@ def test_the_same_instant_on_two_devices_is_not_a_duplicate(store):
 def test_an_escalated_label_supersedes_the_tier_1_one_it_replaces(store):
     """Tier 2 looked at the screen; Tier 1 read a window title. The better answer wins.
 
-    It is still counted as a duplicate — the contract has nowhere else to report it — but the
+    It is still counted as a duplicate - the contract has nowhere else to report it - but the
     stored row improves.
     """
     store.append([ev(0, "doomscrolling", tier=Tier.WINDOW, confidence=0.5)])

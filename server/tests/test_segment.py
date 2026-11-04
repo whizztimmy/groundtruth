@@ -223,7 +223,7 @@ def test_confidence_is_weighted_by_duration_not_by_sample_count(config):
 
 
 def test_a_long_doubtful_stretch_does_pull_confidence_down(config):
-    """Weighting is not a way of ignoring doubt — sustained doubt still counts."""
+    """Weighting is not a way of ignoring doubt - sustained doubt still counts."""
     events = run(range(0, 1201, 60), "research", confidence=0.95) + run(
         range(1260, 2401, 60), "research", confidence=0.5
     )

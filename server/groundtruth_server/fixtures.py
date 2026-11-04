@@ -4,7 +4,7 @@ The fixture is the dashboard's development data, so it has to arrive by the same
 real agent's events would: each entry of `batches` is literally a `POST /events` body, and
 the loader validates it through `EventBatchIn` before writing. A fixture that loads is
 therefore a fixture the API would have accepted, which is the only version of "loads" worth
-having — one that bypassed validation could drift out of contract without anything failing.
+having - one that bypassed validation could drift out of contract without anything failing.
 
     python -m groundtruth_server.fixtures --db demo.db
     python -m groundtruth_server.fixtures --server http://127.0.0.1:8000

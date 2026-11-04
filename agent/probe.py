@@ -4,7 +4,7 @@ Built to settle one question: **is the confidence number real?**
 
 Both answers in the first validation run came back at exactly 0.9. If that figure is
 constant regardless of what the model sees, then `is_acceptable` always passes, the retry
-ladder never climbs, and the uncertain queue never fills — and honest abstention is a
+ladder never climbs, and the uncertain queue never fills - and honest abstention is a
 feature of this product rather than a nicety. A constant 0.9 would mean the feature is
 dead and the dashboard screen built around it shows an empty list forever.
 
@@ -26,7 +26,7 @@ effort improve a low-confidence answer, or degrade it?**
 `classify_verified` climbs that ladder whenever confidence lands under `ACCEPT`, on the
 premise that more thinking helps. The Fireworks workshop published a sweep on short-answer
 text benchmarks where Muse scores *worse* at high effort than at low. Those are text tasks
-and this is screen classification, so the finding does not transfer — but it does mean the
+and this is screen classification, so the finding does not transfer - but it does mean the
 premise is untested here, and the samples the ladder actually fires on are the ambiguous
 ones, which are exactly where a wrong premise would do its damage.
 
@@ -37,7 +37,7 @@ one, and so deliberately overrides the placement guard that `vision()` enforces.
 
 That is defensible here and nowhere else. The guard exists to stop a background agent
 streaming a live screen to a vendor. These are files a person named on a command line
-after choosing them — test fixtures, not surveillance. The distinction is the same one
+after choosing them - test fixtures, not surveillance. The distinction is the same one
 drawn in `docs/validation.md`, and the override is explicit, loud, and confined to this
 file so it can never leak into the agent's own path.
 """
@@ -154,7 +154,7 @@ def report(results: list[Result]) -> None:
         )
         if not any(c < 0.75 for c in confidences):
             print(
-                "Nothing fell below the 0.75 accept threshold, though — the uncertain "
+                "Nothing fell below the 0.75 accept threshold, though - the uncertain "
                 "path is still unproven. Try a deliberately contentless image."
             )
 

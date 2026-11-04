@@ -9,7 +9,7 @@ export interface StackSegment {
   duration_s: number;
   share: number;
   color: string;
-  /** Hatched rather than filled — reserved for the unanswered-span total. */
+  /** Hatched rather than filled - reserved for the unanswered-span total. */
   textured?: boolean;
 }
 
@@ -20,7 +20,7 @@ interface Props {
   /**
    * When false the bar renders in a single neutral with its divisions closed up:
    * one undifferentiated block. Flipping it to true sweeps colour and the 2px
-   * gaps across the day, left to right — the contrast view's whole gesture.
+   * gaps across the day, left to right - the contrast view's whole gesture.
    */
   revealed?: boolean;
   /** Segments at or above this share get a direct label beneath the bar. */
@@ -63,7 +63,7 @@ export function StackedDay({ segments, caption, revealed = true, labelThreshold 
               transitionDelay: `${segment.index * 42}ms`,
               ["--seg-color" as string]: segment.color,
             }}
-            title={`${segment.key} — ${duration(segment.duration_s)} (${percent(segment.share)})`}
+            title={`${segment.key} - ${duration(segment.duration_s)} (${percent(segment.share)})`}
           />
         ))}
       </div>

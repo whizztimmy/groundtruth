@@ -1,7 +1,7 @@
 """Run Tier 4 over a week with a known pattern, so its answers can be judged.
 
 A review of real data cannot be marked. If the model says deep work is fragmented, the
-only way to know whether that is insight or noise is to already know the answer — so
+only way to know whether that is insight or noise is to already know the answer - so
 this builds a week whose patterns were put there on purpose and checks which ones come
 back.
 
@@ -14,9 +14,9 @@ recorded in `docs/validation.md`.
 
 Three patterns are planted:
 
-1. **Deep work and doomscrolling trade off** across days — Thursday is the extreme
+1. **Deep work and doomscrolling trade off** across days - Thursday is the extreme
    (2h doomscrolling, 28m deep work) and Monday the opposite (1h 50m, 30m).
-2. **Deep work is fragmented** — 6h 26m spread over 8 stretches, averaging 48m, with
+2. **Deep work is fragmented** - 6h 26m spread over 8 stretches, averaging 48m, with
    the longest at 1h 10m.
 3. **Weekdays open with deep work, weekends with devotion.**
 

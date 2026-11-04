@@ -21,7 +21,7 @@ const fromHash = () => {
 
 /**
  * Three views over one day. Routing is the location hash rather than a router
- * dependency — it keeps the views linkable for a demo without adding a package to
+ * dependency - it keeps the views linkable for a demo without adding a package to
  * do what six lines do.
  */
 export function App() {

@@ -35,7 +35,7 @@ class TestQuadrants:
     def test_the_two_axes_are_both_required(self):
         """Neither signal alone separates all four quadrants.
 
-        Same churn, different input, different answer — twice, on both rows. If this
+        Same churn, different input, different answer - twice, on both rows. If this
         ever collapses, one of the signals has stopped contributing.
         """
         assert classify(run(0.9, input_active=True)) != classify(

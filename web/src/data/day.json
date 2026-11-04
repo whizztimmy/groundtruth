@@ -153,7 +153,7 @@
       "end_ts": "2026-10-27T11:12:00+01:00",
       "device_id": "desk-win-01",
       "category": "deep work",
-      "label": "auth refactor — token rotation",
+      "label": "auth refactor - token rotation",
       "confidence": 0.95,
       "event_count": 20,
       "duration_s": 3600,
@@ -225,7 +225,7 @@
       "end_ts": "2026-10-27T13:36:00+01:00",
       "device_id": "desk-win-01",
       "category": "deep work",
-      "label": "auth refactor — second pass",
+      "label": "auth refactor - second pass",
       "confidence": 0.93,
       "event_count": 14,
       "duration_s": 2400,
@@ -310,7 +310,7 @@
         "start_ts": "2026-10-27T13:36:00+01:00",
         "end_ts": "2026-10-27T13:43:00+01:00",
         "process": "WindowsTerminal.exe",
-        "evidence": "A long-running build scrolled output continuously while no input arrived — churn reads like a feed.",
+        "evidence": "A long-running build scrolled output continuously while no input arrived - churn reads like a feed.",
         "suggestions": [
           "deep work",
           "shallow work"

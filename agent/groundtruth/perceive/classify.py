@@ -1,12 +1,12 @@
 """Tier 2 classification via Muse Glimmer.
 
-Glimmer runs on a backend the operator controls — that is the whole privacy argument —
+Glimmer runs on a backend the operator controls - that is the whole privacy argument -
 and is asked for a label it can be held to: a category, a confidence, and the evidence it
 used. Evidence is not decoration. It is what the user reads when confirming an uncertain
 span, and what makes a wrong label debuggable instead of mysterious.
 
 The model is not shown a bare screenshot. It is shown a frame *plus* the measurements the
-agent already has — region churn, how long each region held, whether input was arriving —
+agent already has - region churn, how long each region held, whether input was arriving -
 because those answer questions a still frame cannot. A screenshot of a feed and a
 screenshot of an article look alike; one of them is being pulled past.
 
@@ -77,8 +77,8 @@ taxonomy converges on the individual rather than on an average.
 EFFORT_LADDER = ("low", "medium", "high")
 """Reasoning effort to escalate through on retry.
 
-Starts low because most samples are easy — a full-screen editor with no feed in sight
-needs no deliberation — and the cost of always reasoning hard on an always-on loop is the
+Starts low because most samples are easy - a full-screen editor with no feed in sight
+needs no deliberation - and the cost of always reasoning hard on an always-on loop is the
 reason people turn trackers off.
 """
 
@@ -94,7 +94,7 @@ def build_prompt(
 
     Measurements are stated as observations, never as conclusions. The motion prior says
     "content replaced continuously while the user supplied input", not "this is
-    doomscrolling" — the model must weigh what was seen rather than ratify a heuristic.
+    doomscrolling" - the model must weigh what was seen rather than ratify a heuristic.
     That distinction is what keeps the model able to overrule the heuristic when a
     terminal scrolls during real work.
     """

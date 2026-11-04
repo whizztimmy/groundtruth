@@ -45,8 +45,8 @@ PROBLEM_JSON = "application/problem+json"
 UNPROCESSABLE = 422
 """Spelled out rather than taken from `starlette.status`.
 
-Starlette is mid-rename on this constant — `HTTP_422_UNPROCESSABLE_ENTITY` is deprecated in
-favour of `HTTP_422_UNPROCESSABLE_CONTENT` — and the number is not going to change.
+Starlette is mid-rename on this constant - `HTTP_422_UNPROCESSABLE_ENTITY` is deprecated in
+favour of `HTTP_422_UNPROCESSABLE_CONTENT` - and the number is not going to change.
 """
 
 
@@ -66,7 +66,7 @@ def _problem(status_code: int, detail: str | None = None, **extra: object) -> JS
 def _to_events(batch: EventBatchIn) -> list[Event]:
     """Translate a validated batch into domain events.
 
-    `device_id` comes off the envelope, which is the only place it exists — a device writes
+    `device_id` comes off the envelope, which is the only place it exists - a device writes
     its own stream and nothing else, so there is no per-event device to disagree with it.
     """
     return [
@@ -102,7 +102,7 @@ def create_app(store: EventStore | None = None, settings: Settings | None = None
     async def lifespan(_: FastAPI):
         """Close the store on shutdown, but only the one this app opened.
 
-        A store handed in by a caller — the tests, or an embedding process — belongs to
+        A store handed in by a caller - the tests, or an embedding process - belongs to
         whoever created it; closing it here would be reaching into someone else's resource.
         """
         yield

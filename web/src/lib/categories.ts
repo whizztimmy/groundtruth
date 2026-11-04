@@ -1,7 +1,7 @@
 /**
  * The category registry: one palette, defined once, shared by all three views.
  *
- * `CATEGORY_ORDER` is the canonical order — it runs from the most deliberate use
+ * `CATEGORY_ORDER` is the canonical order - it runs from the most deliberate use
  * of attention to the least, and then to the categories that are deliberately
  * neutral. It is also the palette's fixed slot order, which is what the
  * colourblind-separation validation was run against, so reordering this array
@@ -29,7 +29,7 @@ const META: readonly CategoryMeta[] = [
   { key: "doomscrolling", varName: "--cat-doomscrolling", gloss: "feed consumption without an end state" },
   { key: "admin", varName: "--cat-admin", gloss: "overhead and errands" },
   { key: "idle", varName: "--cat-idle", gloss: "machine awake, nobody there" },
-  { key: "uncertain", varName: "--cat-uncertain", gloss: "not guessed — awaiting your answer" },
+  { key: "uncertain", varName: "--cat-uncertain", gloss: "not guessed - awaiting your answer" },
 ];
 
 const BY_KEY = new Map(META.map((m) => [m.key, m]));
@@ -37,7 +37,7 @@ const BY_KEY = new Map(META.map((m) => [m.key, m]));
 /** Canonical display order. Unknown categories sort after all known ones. */
 export const CATEGORY_ORDER: readonly string[] = META.map((m) => m.key);
 
-/** Reserved label from `agent/groundtruth/types.py` — stored rather than guessed. */
+/** Reserved label from `agent/groundtruth/types.py` - stored rather than guessed. */
 export const UNCERTAIN = "uncertain";
 
 /**

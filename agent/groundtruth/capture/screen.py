@@ -7,7 +7,7 @@ The most sensitive thing this project touches. Three rules hold without exceptio
 2. **Only the active display.** A second monitor the user is not looking at is captured
    only if the foreground window is on it. Grabbing every screen because it is easier
    would double the exposure for no gain.
-3. **Downscaled before it goes anywhere.** See `TARGET_WIDTH` — this is a privacy control
+3. **Downscaled before it goes anywhere.** See `TARGET_WIDTH` - this is a privacy control
    as much as a cost one.
 
 `mss` is used rather than Pillow's ImageGrab because it can address individual monitors
@@ -32,8 +32,8 @@ TARGET_WIDTH = 1024
 """Width every frame is reduced to before leaving this module.
 
 Chosen as a deliberate trade rather than a performance tweak. At this width the
-*structure* of a screen survives — pane layout, where a feed sits, whether a video is
-playing, how regions are arranged — which is what SAM 3.1 segments and what the motion
+*structure* of a screen survives - pane layout, where a feed sits, whether a video is
+playing, how regions are arranged - which is what SAM 3.1 segments and what the motion
 model needs. Fine body text largely does not survive, which is the point: the classifier
 should be reading the shape of the screen, not its contents.
 
@@ -121,7 +121,7 @@ class FrameGrabber:
         """One downscaled RGB frame, in memory.
 
         Returns a new image each call rather than mutating a shared one, because the
-        caller hands it to an async classifier — a reused buffer could be overwritten
+        caller hands it to an async classifier - a reused buffer could be overwritten
         mid-inference by the next sample.
         """
         display = display or self.displays()[0]

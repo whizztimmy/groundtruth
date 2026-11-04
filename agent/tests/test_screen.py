@@ -102,7 +102,7 @@ class TestGrabber:
         """The promise in ARCHITECTURE.md, made checkable.
 
         Runs a grab with the working directory moved to an empty tree and asserts it
-        stayed empty. Not exhaustive — it cannot see writes to absolute paths — but it
+        stayed empty. Not exhaustive - it cannot see writes to absolute paths - but it
         catches the realistic regression of someone adding a debug dump.
         """
         monkeypatch.chdir(tmp_path)

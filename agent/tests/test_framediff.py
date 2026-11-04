@@ -93,7 +93,7 @@ class TestContentEdited:
     def test_a_caret_sized_change_stays_far_below_static(self):
         """A blinking caret changes a handful of pixels every half second forever.
 
-        It does light its own cell — CELL_DELTA is too low to suppress a 2x18 block of
+        It does light its own cell - CELL_DELTA is too low to suppress a 2x18 block of
         white, and raising it that far would start discarding real text replacement. The
         protection comes from the ratio instead: one or two cells out of 2,304 is three
         orders of magnitude below STATIC, so an idle editor cannot read as a live feed.

@@ -1,14 +1,14 @@
 """Tier 3: off-screen time, reported by the person who was there.
 
 A screen agent is blind to the gym, the commute, a walk, a conversation. Those hours are
-not idle — they are the ones a person most wants back, and no amount of perception
+not idle - they are the ones a person most wants back, and no amount of perception
 recovers them. So Tier 3 inverts the direction: instead of the agent inferring an
 activity, the user states one, and the agent records it with the confidence that deserves.
 
 ## This module never opens a microphone
 
 Deliberately, and it is the main design decision here. There is no always-on listening
-path, and the agent loop cannot reach this code — Tier 3 happens only when a person runs
+path, and the agent loop cannot reach this code - Tier 3 happens only when a person runs
 `python -m groundtruth.checkin` against audio they already recorded, on their phone or
 with any recorder they like.
 
@@ -24,7 +24,7 @@ silent.
 `muse-voice-transcribe` is a Meta API model and there is no local alternative.
 
 That is not the placement rule being weakened; it is a different situation. A frame is
-captured passively, continuously, and shows whatever happened to be on screen — including
+captured passively, continuously, and shows whatever happened to be on screen - including
 things the person forgot was there. A check-in is a sentence somebody chose to say,
 knowing it was being recorded and why. The rule that actually matters is not "nothing
 leaves the device", it is "nothing leaves that the person did not deliberately offer",
@@ -56,7 +56,7 @@ MAX_BACKDATE = timedelta(hours=12)
 
 A check-in is for off-screen time you are reporting as you come back to the desk. Beyond
 half a day it stops being that and becomes manual time entry, which is a different
-feature with different failure modes — and one whose main risk is a person reconstructing
+feature with different failure modes - and one whose main risk is a person reconstructing
 a week from memory and then trusting the total. Refused rather than clamped, because
 silently moving somebody's gym session to a time they did not say is worse than declining
 to record it.
@@ -76,14 +76,14 @@ direct question about a specific span.
 
 # There is deliberately no "inferred duration" path. The first version asked the model to
 # estimate a length when none was stated and recorded it at low confidence. Across five
-# phrasings it never once estimated — it returned 0 every time, declining to invent. That
+# phrasings it never once estimated - it returned 0 every time, declining to invent. That
 # is the better behaviour, so the prompt now asks for a refusal instead of an estimate and
 # the caller is told to say how long it was. The person is standing right there.
 
 CADENCE_S = 120.0
 """Spacing of the synthesised events across the span.
 
-The contract in `docs/API.md` has no duration field — an event is an instant, and the
+The contract in `docs/API.md` has no duration field - an event is an instant, and the
 server derives sessions from runs of same-labelled events. So a 45-minute check-in becomes
 events every two minutes carrying the same label, which is exactly the shape
 `server/fixtures/build_day.py` already encodes for its voice-logged gym block.
@@ -103,7 +103,7 @@ OFFSCREEN_CATEGORIES: tuple[str, ...] = (
 """Categories only a check-in can produce, kept out of the screen classifier's list.
 
 `perceive/classify.DEFAULT_CATEGORIES` was built for things visible on a screen, and it
-has nowhere to put a gym session — so without this, `interpret` refuses the most obvious
+has nowhere to put a gym session - so without this, `interpret` refuses the most obvious
 check-in there is.
 
 `fitness` rather than `gym`, which was the first attempt and was wrong: a gym is a place,
@@ -114,7 +114,7 @@ one concept with two names in the same taxonomy is how a timeline becomes unread
 Separate rather than merged, because the two tiers have different *legitimate* output
 spaces. A frame can never truthfully be "gym", so offering that option to the screen
 classifier is handing it a way to be confidently wrong about the one category it has no
-evidence for. A check-in can say "deep work" — reviewing a contract on paper for an hour —
+evidence for. A check-in can say "deep work" - reviewing a contract on paper for an hour -
 so check-ins see the union and the classifier does not.
 """
 
@@ -190,18 +190,18 @@ async def transcribe(backend: Backend, audio: bytes, *, fmt: str) -> str:
     tried against `api.meta.ai/v1` on 2026-10-31, with a key that reaches
     `muse-voice-transcribe-1.0` in `/models`:
 
-    — `/chat/completions` with an `input_audio` content part: 404 `model_not_found`
-    — `/audio/transcriptions` (the Whisper-style multipart shape): 404, empty body
-    — `/audio/translations`: 404, empty body
-    — `/v1/files` upload: **200**, returning a usable file id
-    — `/v1/responses` with a correctly shaped `input_audio` part: 404 `model_not_found`
+    - `/chat/completions` with an `input_audio` content part: 404 `model_not_found`
+    - `/audio/transcriptions` (the Whisper-style multipart shape): 404, empty body
+    - `/audio/translations`: 404, empty body
+    - `/v1/files` upload: **200**, returning a usable file id
+    - `/v1/responses` with a correctly shaped `input_audio` part: 404 `model_not_found`
 
     That last line is the useful one, added after a second attempt. The upload succeeds and
     the content shape passes validation, so the request is right and the model is simply
     not served on any surface this found. It is in the catalogue and reachable nowhere.
 
     An empty 404 is a missing route, while the chat endpoint returned a structured error
-    about the model — so the model is in the catalogue and is served somewhere this did
+    about the model - so the model is in the catalogue and is served somewhere this did
     not find. `sam-3.1` turned out to be on `/v1/responses`, which `backends.py` does not
     speak, so that is the first place to look.
 
@@ -313,7 +313,7 @@ def to_events(checkin: CheckIn, *, device_id: str, cadence_s: float = CADENCE_S)
     """Expand a check-in into the Tier 3 events the contract can carry.
 
     `process` and `window_title` are None because there was no screen. That is not missing
-    data — it is the whole point of this tier, and it is what the dashboard keys on to
+    data - it is the whole point of this tier, and it is what the dashboard keys on to
     show the span as reported rather than observed.
     """
     stated = "stated" if checkin.duration_stated else "duration not stated"

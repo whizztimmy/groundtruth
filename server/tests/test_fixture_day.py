@@ -151,7 +151,7 @@ def test_the_morning_work_block_spans_two_processes_as_one_session(loaded):
 def test_the_brief_doubt_inside_the_work_block_does_not_sink_its_confidence(loaded):
     """Two doubtful minutes out of ninety move the session's confidence by two points.
 
-    By sample count they would move it the same amount here — the samples are evenly spaced —
+    By sample count they would move it the same amount here - the samples are evenly spaced -
     but the session's confidence stays well clear of the 0.52 those two samples reported,
     which is the property the dashboard's confidence badge depends on.
     """

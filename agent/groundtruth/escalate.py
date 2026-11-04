@@ -45,7 +45,7 @@ AMBIGUOUS_PROCESSES: frozenset[str] = frozenset(
 )
 """Processes whose window title cannot be trusted to describe the activity.
 
-Not a blocklist — membership only means "ask Tier 2", never "this is bad". Deliberately
+Not a blocklist - membership only means "ask Tier 2", never "this is bad". Deliberately
 conservative: a process absent from this set is resolved for free, so adding one is a
 real cost decision.
 """
@@ -104,7 +104,7 @@ class Decision:
     """Whether to climb, and why.
 
     The reason is carried rather than discarded so escalation behaviour can be audited
-    against a real day's trace — the cheapest way to tune the policy is to look at what
+    against a real day's trace - the cheapest way to tune the policy is to look at what
     actually triggered it.
     """
 

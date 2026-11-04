@@ -1,7 +1,7 @@
 """Shared test fixtures.
 
 The server package is imported from the repo rather than from an installed wheel, so the
-tests run against the working tree without a build step — which matters during a hackathon,
+tests run against the working tree without a build step - which matters during a hackathon,
 where an install you forgot to redo is a bug you spend an hour not finding.
 """
 

@@ -1,7 +1,7 @@
 """Tests for the agent loop's event continuity.
 
 Both behaviours here were found by running the agent against a real desktop, not by
-reading the code — each component was individually correct and the gap was between them.
+reading the code - each component was individually correct and the gap was between them.
 """
 
 from datetime import datetime, timezone

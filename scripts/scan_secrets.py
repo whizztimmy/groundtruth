@@ -1,7 +1,7 @@
 """Block commits that would publish a credential.
 
 This repository is public by hackathon rule, so a secret reaching a commit is not a
-near-miss — it is disclosure the moment it is pushed, and rewriting history afterwards
+near-miss - it is disclosure the moment it is pushed, and rewriting history afterwards
 does not help because clones and forks keep the object.
 
 Scans **staged content**, not the working tree. Those differ in exactly the case that
@@ -9,7 +9,7 @@ matters: a file edited after `git add` would otherwise be scanned in its safe st
 its unsafe state is what gets committed.
 
 Findings are reported redacted. A scanner that prints the secret it found has moved it
-from one file into your terminal, your scrollback, and your CI logs — which is how the
+from one file into your terminal, your scrollback, and your CI logs - which is how the
 leak this was written for happened in the first place.
 """
 

@@ -2,7 +2,7 @@
 
 This is a pure function, and the purity is the point rather than an aesthetic preference.
 Sessions are not stored: they are recomputed on every read. That is what makes a taxonomy
-change cheap — the user splitting "research" into "research" and "learning" re-segments
+change cheap - the user splitting "research" into "research" and "learning" re-segments
 three months of history instead of discarding it, because the events are still there and
 nothing downstream of them was ever treated as the source of truth.
 
@@ -14,11 +14,11 @@ re-segmentation test pins down.
 
 A span continues into the next event when all of these hold:
 
-- the gap is no longer than `idle_gap_s` — a longer one means the agent stopped observing,
+- the gap is no longer than `idle_gap_s` - a longer one means the agent stopped observing,
   and unobserved time is not evidence of anything;
-- the device is the same — a phone pickup mid-desktop-session is a handoff, and stitching
+- the device is the same - a phone pickup mid-desktop-session is a handoff, and stitching
   those back together is a read-time concern the contract puts in the query layer;
-- the category is the same — this is the merge rule proper;
+- the category is the same - this is the merge rule proper;
 - and uncertainty is not being swallowed: an `uncertain` event joins only another
   `uncertain` event, from the same process.
 
@@ -69,7 +69,7 @@ class SegmentConfig:
     """Most seconds a single sample may be credited with.
 
     Only applies to the last event of a span, where there is no following sample to bound
-    it. The alternative — crediting it up to `idle_gap_s` — would attribute two minutes of
+    it. The alternative - crediting it up to `idle_gap_s` - would attribute two minutes of
     unobserved time to whatever happened to be on screen when the agent stopped looking,
     which is precisely the kind of made-up number this project exists to replace.
     """
@@ -122,7 +122,7 @@ def order_events(events: Iterable[Event]) -> tuple[Event, ...]:
     """Put a stream in segmentation order, keeping one event per `(device_id, ts)`.
 
     Sorting here rather than trusting the caller is what makes segmentation independent of
-    how the events were fetched — the store returns them ordered, but a merge of two devices'
+    how the events were fetched - the store returns them ordered, but a merge of two devices'
     batches in memory would not be, and a segmenter whose output depends on arrival order is
     not recomputable.
 
@@ -155,7 +155,7 @@ def _continues(prev: Event, nxt: Event, gap_s: float, config: SegmentConfig) -> 
         # An uncertain event is a question the user has not been asked yet. Absorbed into a
         # confident neighbour it would stop being a question and start being a wrong number,
         # which is the one failure this system is not allowed to have. Redundant with the
-        # category check above today — `uncertain` *is* a category — and kept explicit so
+        # category check above today - `uncertain` *is* a category - and kept explicit so
         # that any future "merge adjacent similar categories" rule cannot quietly undo it.
         if not (prev.is_uncertain and nxt.is_uncertain):
             return False
@@ -171,7 +171,7 @@ def _continues(prev: Event, nxt: Event, gap_s: float, config: SegmentConfig) -> 
 def _dominant(weights: dict[str, float]) -> str:
     """Highest-coverage key, earliest insertion winning a tie.
 
-    Insertion order is stream order, so a tie resolves to whichever came first — stable
+    Insertion order is stream order, so a tie resolves to whichever came first - stable
     across re-segmentation, which a `max()` over a plain dict would not be.
     """
     return max(weights, key=weights.__getitem__)
@@ -206,7 +206,7 @@ def _close(covered: Sequence[Coverage]) -> Span:
         confidence = confidence_numerator / total_s
     else:
         # Degenerate only when coverage is configured to zero or every event shares one
-        # instant. A plain mean is wrong in general — that is the whole point of weighting —
+        # instant. A plain mean is wrong in general - that is the whole point of weighting -
         # but it beats dividing by zero, and with no duration to weight by it is also the
         # only answer available.
         confidence = sum(c.event.confidence for c in covered) / len(covered)
@@ -277,7 +277,7 @@ def segment(
     events: Iterable[Event],
     config: SegmentConfig | None = None,
 ) -> list[Session]:
-    """Derive sessions from an event stream — the contract's view of `segment_spans`."""
+    """Derive sessions from an event stream - the contract's view of `segment_spans`."""
     return [span.session for span in segment_spans(events, config)]
 
 
@@ -292,7 +292,7 @@ def apply_resolutions(
     saw survives; only the derivation changes. That is also what makes a corrected answer
     cheap: the second resolution supersedes the first and history re-derives.
 
-    Confidence becomes 1.0 because the label is no longer a guess — the user stated it, and
+    Confidence becomes 1.0 because the label is no longer a guess - the user stated it, and
     `Tier` already encodes that a user-stated label supersedes a classified one. The tier
     itself is left alone: Tier 2 is still what *observed* this span, even once the user is
     what labelled it.
@@ -340,7 +340,7 @@ def stated_intervals(
     A check-in arrives as a run of instants at the client's cadence, not as a span, because
     `docs/API.md` has no duration field. So the interval is reconstructed from first to last
     event of each run, where a run breaks on a change of category or label, or on a gap wider
-    than `idle_gap_s` — the same question the segmenter asks, so two check-ins an hour apart
+    than `idle_gap_s` - the same question the segmenter asks, so two check-ins an hour apart
     do not merge into one interval swallowing the work between them.
     """
     config = config or SegmentConfig()
@@ -381,14 +381,14 @@ def apply_stated_spans(
     applies that to events sharing an instant. A check-in covers a *span*, and the first
     live run showed what that costs: a 40-minute gym check-in backdated over the two minutes
     the desktop agent was also sampling produced `deep work, uncertain, fitness, uncertain,
-    deep work` — five sessions, three of them zero seconds long, thrashing between two
+    deep work` - five sessions, three of them zero seconds long, thrashing between two
     contradictory claims about the same minutes.
 
     The rule is physical rather than statistical: you cannot be at the gym and at this
     desk. So where a person has stated what they were doing, their statement wins and the
     machine's guess about those same minutes is not derived.
 
-    **Same device only.** Across devices an overlap is not a contradiction — a desktop left
+    **Same device only.** Across devices an overlap is not a contradiction - a desktop left
     rendering something while you are out is a real record from a different machine, and
     suppressing it would be this function inventing a fact rather than preferring one.
 

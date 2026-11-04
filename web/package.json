@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "GroundTruth dashboard — the contrast view, the day timeline, and the uncertain queue.",
+  "description": "GroundTruth dashboard - the contrast view, the day timeline, and the uncertain queue.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

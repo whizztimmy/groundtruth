@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 /**
  * Colour scheme follows the OS by default. The explicit modes exist because a
  * demo has to be able to show both on command, not because the system setting is
- * insufficient — "auto" is the default and the one the product ships behaving as.
+ * insufficient - "auto" is the default and the one the product ships behaving as.
  */
 export type ThemeChoice = "auto" | "light" | "dark";
 

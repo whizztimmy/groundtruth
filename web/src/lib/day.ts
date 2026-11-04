@@ -2,8 +2,8 @@
  * Derivations the views share.
  *
  * The contract is kept verbatim in `api/types.ts`; the shapes the UI actually
- * wants — a timeline extent, a category legend, a session positioned as a
- * percentage of the day — are computed here so no component re-derives them and
+ * wants - a timeline extent, a category legend, a session positioned as a
+ * percentage of the day - are computed here so no component re-derives them and
  * the three views cannot disagree about the same day.
  */
 
@@ -27,7 +27,7 @@ export interface DayExtent {
 
 /**
  * The timeline spans the tracked day, snapped out to whole hours so the gridlines
- * land on readable times. It is derived from the data rather than fixed at 00:00–24:00:
+ * land on readable times. It is derived from the data rather than fixed at 00:00-24:00:
  * a tracker that renders sixteen empty hours to show eight tracked ones wastes the
  * screen the demo is recorded on.
  */
@@ -42,7 +42,7 @@ export function dayExtent(sessions: Session[], uncertain: UncertainSpan[]): DayE
 
   // Hours are snapped on the day's own clock, not on UTC. Snapping in UTC would
   // put the gridlines on :00 of the wrong timezone, so a day lived at +01:00 would
-  // be ruled at 07:00, 08:00 ... while its sessions started at 08:40 — the blocks
+  // be ruled at 07:00, 08:00 ... while its sessions started at 08:40 - the blocks
   // would be positioned correctly and every label beside them would be an hour out.
   const offsetSource = sessions[0]?.start_ts ?? uncertain[0]?.start_ts ?? "";
   const offsetMs = offsetMinutesOf(offsetSource) * 60_000;
@@ -95,7 +95,7 @@ export interface LegendEntry {
 }
 
 /**
- * The legend, in canonical category order rather than by size — a legend that
+ * The legend, in canonical category order rather than by size - a legend that
  * reorders itself between days is a legend you have to re-read every time.
  */
 export function legendFor(groups: SummaryGroup[]): LegendEntry[] {
@@ -111,7 +111,7 @@ export function groupsByDuration(groups: SummaryGroup[]): SummaryGroup[] {
 
 /**
  * How many distinct activities the day resolved into, excluding the reserved
- * `uncertain` key — the uncertain total is a question, not an activity, and the
+ * `uncertain` key - the uncertain total is a question, not an activity, and the
  * contrast view counts it separately.
  */
 export function activityCount(groups: SummaryGroup[]): number {
@@ -122,7 +122,7 @@ export function uncertainTotal(groups: SummaryGroup[]): number {
   return groups.find((g) => g.key === UNCERTAIN)?.duration_s ?? 0;
 }
 
-/** The single largest process row — the figure the contrast view argues with. */
+/** The single largest process row - the figure the contrast view argues with. */
 export function headlineProcess(day: Day): SummaryGroup | undefined {
   return groupsByDuration(day.summary.naive_by_process)[0];
 }

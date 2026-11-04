@@ -3,7 +3,7 @@
 The only part of this project that may legitimately use a vendor-managed endpoint, and
 the reason is structural rather than a concession. Every other tier handles screen
 content; this one never sees a pixel, a window title, or a transcript. It is handed
-pre-computed durations and category names — "deep work, 6h 20m, average stretch 24m" —
+pre-computed durations and category names - "deep work, 6h 20m, average stretch 24m" -
 and asked what they mean.
 
 That is why `Reviewer` accepts a `managed` backend where `Classifier` and `RegionTracker`
@@ -11,7 +11,7 @@ refuse one, and why Meta's free-credit terms are acceptable here: "your content 
 used for product improvement" applies to the string "deep work", not to anyone's screen.
 
 The model does no arithmetic. `patterns.py` computes every number before the prompt is
-built — see that module for why.
+built - see that module for why.
 
 It is agentic in a bounded way: the review may ask one follow-up question about a
 specific day or category before committing to its observations. One round, because the
@@ -61,7 +61,7 @@ what one would expect:
 
 **Two figures that cannot differ are one figure.** A category that happened on only \none day has a period total equal to that day's figure, so relating them looks like a \ncomparison and is not one. Before you state an observation, ask whether the figures you \nare relating could have come out differently from each other. If they could not, it is a \nrestatement wearing a comparison's clothes.
 
-If none of those hold — and with only a day or two of data, usually none will — return \
+If none of those hold - and with only a day or two of data, usually none will - return \
 no observations at all. Saying nothing is the correct output for thin data, and padding \
 it with restatement wastes the person's attention and teaches them to ignore you.
 
@@ -108,7 +108,7 @@ async def fetch_spans(
 ) -> list[Span]:
     """Pull sessions from the sync server.
 
-    Reads `GET /sessions`, which returns derived spans rather than raw events — the
+    Reads `GET /sessions`, which returns derived spans rather than raw events - the
     review has no business seeing individual observations.
     """
     owns = client is None
@@ -256,7 +256,7 @@ async def run(server_url: str, backend: Backend, *, days: int = 7) -> Review:
 
 
 def _main() -> None:
-    """`python -m groundtruth.review` — print a review of the last N days.
+    """`python -m groundtruth.review` - print a review of the last N days.
 
     Reads SPARK_* or WONDER_* from the environment. Managed placement is expected here
     and not a misconfiguration: see the module docstring.

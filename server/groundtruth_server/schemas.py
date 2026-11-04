@@ -6,7 +6,7 @@ dashboard is already coded against. When the two need to differ, they differ her
 translation step, rather than by the domain being bent to match the wire.
 
 Timestamps are serialised through `to_iso` rather than left to the default encoder, so the
-exact shape the contract shows — `2026-10-28T09:14:02Z` — is a property of this file and not
+exact shape the contract shows - `2026-10-28T09:14:02Z` - is a property of this file and not
 of whichever pydantic version is installed.
 """
 

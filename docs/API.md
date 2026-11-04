@@ -17,7 +17,7 @@ All timestamps are ISO 8601 with an explicit UTC offset. All durations are secon
 
 ## `POST /events`
 
-Append a batch of events. Idempotent on `(device_id, ts)` — a retried batch after a
+Append a batch of events. Idempotent on `(device_id, ts)` - a retried batch after a
 flaky upload is safe, which matters because the agent is offline-first.
 
 ```json
@@ -91,7 +91,7 @@ Query: `from`, `to`, optional `group_by` of `category` (default) or `label`.
 ```
 
 `naive_by_process` is what a conventional tracker would have reported for the same window.
-It exists so the dashboard can show both side by side — that contrast is the product's
+It exists so the dashboard can show both side by side - that contrast is the product's
 entire argument, so the server computes it rather than leaving it to the client.
 
 ## `GET /uncertain`

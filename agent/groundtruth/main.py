@@ -6,7 +6,7 @@ ambiguous, classify, emit an event. Everything expensive is behind a decision ma
 in `backends.vision`.
 
 The classifier is injected rather than constructed here, so the loop runs end to end with
-a stub before any model is reachable. That is not a testing convenience — it means the
+a stub before any model is reachable. That is not a testing convenience - it means the
 sampling cadence, the escalation policy and the sync path can all be exercised and
 demonstrated while partner inference is still being provisioned.
 """
@@ -41,7 +41,7 @@ from .types import Classification, Event, Observation, Tier
 log = logging.getLogger("groundtruth")
 
 _INPUT_HISTORY = 16
-"""Samples of input history to retain — roughly half a minute at the default cadence.
+"""Samples of input history to retain - roughly half a minute at the default cadence.
 
 Long enough for `motion.classify` to see a run, short enough that a burst of typing ten
 minutes ago does not colour what is on screen now.
@@ -53,7 +53,7 @@ IDLE = Classification(
     confidence=1.0,
     evidence="No input for longer than the idle threshold.",
 )
-"""Idle is asserted, not inferred — the OS tells us directly, so confidence is 1.0.
+"""Idle is asserted, not inferred - the OS tells us directly, so confidence is 1.0.
 
 Treating it as a real classification rather than a gap keeps the segmenter simple: it
 closes a session on category change, and idle is just another category.
@@ -89,7 +89,7 @@ class SupportsClassify(Protocol):
     """What the loop needs from a classifier. Deliberately narrow.
 
     Narrow because the loop should not care whether the model is local, self-hosted, a
-    stub, or a replay of a recorded day — all four are useful, and all four satisfy this.
+    stub, or a replay of a recorded day - all four are useful, and all four satisfy this.
     """
 
     async def classify_verified(
@@ -134,7 +134,7 @@ class StubClassifier:
             label=category,
             category=category,
             confidence=0.5,
-            evidence=f"{evidence} (stub classifier — not a real observation)",
+            evidence=f"{evidence} (stub classifier - not a real observation)",
         )
 
 
@@ -197,7 +197,7 @@ class Agent:
     def stopping(self) -> asyncio.Event:
         """Set when the agent is shutting down.
 
-        Exposed so sibling tasks — the syncer, chiefly — can wind down on the same
+        Exposed so sibling tasks - the syncer, chiefly - can wind down on the same
         signal instead of being cancelled mid-request.
         """
         return self._stopping
@@ -284,7 +284,7 @@ class Agent:
                     return
                 # No Tier 1 label and nothing to carry: the very first samples of an
                 # unrecognised process while Tier 2 is rate limited. A gap is the honest
-                # answer — inventing a label here would be the exact failure the product
+                # answer - inventing a label here would be the exact failure the product
                 # exists to correct.
                 log.debug("no label yet for %s; awaiting first classification", obs.process)
                 return
@@ -424,7 +424,7 @@ async def _main() -> None:
     buffer.prune(config.buffer_max_rows)
 
     # Only constructed when a backend is actually allowed to see pixels. Without one,
-    # the agent runs Tier 1 only rather than grabbing frames nothing will look at —
+    # the agent runs Tier 1 only rather than grabbing frames nothing will look at -
     # capturing a screen for no reason is the thing this project exists not to do.
     grabber: FrameGrabber | None = None
     if config.tier2_enabled:

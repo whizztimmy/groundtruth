@@ -76,7 +76,7 @@ export function AppShell({ tabs, active, onSelect, provenance, children }: Props
 
 /**
  * States where the figures came from. A dashboard that cannot reach its server
- * should say so rather than let fixture numbers read as a live day — the whole
+ * should say so rather than let fixture numbers read as a live day - the whole
  * product is an argument about trusting what a tracker tells you.
  */
 function ProvenanceBadge({ provenance }: { provenance: Provenance }) {

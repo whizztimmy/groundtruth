@@ -1,5 +1,5 @@
 /**
- * Generates `src/data/day.json` — one realistic tracked day, shaped exactly like
+ * Generates `src/data/day.json` - one realistic tracked day, shaped exactly like
  * the responses in `docs/API.md`.
  *
  * The day is authored once, as an ordered run of contiguous segments, and every
@@ -33,7 +33,7 @@ const START_LOCAL = "08:40:00";
 /**
  * The authored day. `kind: "uncertain"` segments are spans the classifier declined
  * to label: they are tracked time, so they count toward the day's total and appear
- * as a group, but they are deliberately absent from /sessions — the segmenter never
+ * as a group, but they are deliberately absent from /sessions - the segmenter never
  * merges an uncertain span into a neighbour. The holes they leave in the timeline
  * are the point: the system shows what it does not know.
  *
@@ -50,7 +50,7 @@ const SEGMENTS = [
     evidence: "Static documentation pages across three tabs, code samples visible, low region churn throughout." },
   { s: 900, kind: "session", category: "shallow work", label: "tidying branches and stale files", process: "Code.exe", confidence: 0.81,
     evidence: "Editor focused but no sustained edit region; file tree and terminal taking turns in short bursts." },
-  { s: 3600, kind: "session", category: "deep work", label: "auth refactor — token rotation", process: "Code.exe", confidence: 0.95,
+  { s: 3600, kind: "session", category: "deep work", label: "auth refactor - token rotation", process: "Code.exe", confidence: 0.95,
     evidence: "One editor region held focus for the full hour with steady keystroke cadence and no feed region on screen." },
   { s: 660, kind: "session", category: "idle", label: "machine awake, no input", process: "Code.exe", confidence: 0.97,
     evidence: "Frame unchanged between samples and no input events; foreground window never lost focus." },
@@ -65,10 +65,10 @@ const SEGMENTS = [
     evidence: "No input and no region change across twelve consecutive samples while a browser window held focus." },
   { s: 420, kind: "session", category: "admin", label: "expense receipts", process: "chrome.exe", confidence: 0.84,
     evidence: "Form regions with short-lived input focus and a repeated upload dialog; no reading dwell." },
-  { s: 2400, kind: "session", category: "deep work", label: "auth refactor — second pass", process: "Code.exe", confidence: 0.93,
+  { s: 2400, kind: "session", category: "deep work", label: "auth refactor - second pass", process: "Code.exe", confidence: 0.93,
     evidence: "Same editor region as the morning span, diff view opened twice, terminal used for targeted test runs." },
   { s: 420, kind: "uncertain", process: "WindowsTerminal.exe",
-    evidence: "A long-running build scrolled output continuously while no input arrived — churn reads like a feed.",
+    evidence: "A long-running build scrolled output continuously while no input arrived - churn reads like a feed.",
     suggestions: ["deep work", "shallow work"] },
   { s: 1680, kind: "session", category: "research", label: "comparing inference providers", process: "chrome.exe", confidence: 0.86,
     evidence: "Two pricing pages and a benchmark table held side by side; repeated back-and-forth between fixed regions." },

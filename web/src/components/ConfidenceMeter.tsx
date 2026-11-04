@@ -7,7 +7,7 @@ import "./ConfidenceMeter.css";
  * ACCEPT mirrors `Confidence.ACCEPT` in `agent/groundtruth/types.py`: the agent
  * stores a classification at or above it, retries below it, and files anything
  * still short as `uncertain`. Showing the threshold rather than a bare percentage
- * is what makes the number mean something — it says what the figure had to beat.
+ * is what makes the number mean something - it says what the figure had to beat.
  */
 const ACCEPT = 0.75;
 

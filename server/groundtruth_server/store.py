@@ -2,7 +2,7 @@
 
 Three things live here and only one of them is authoritative. Events are the ground the
 rest stands on: append-only, device-owned, never edited. Resolutions are an overlay the
-read path applies on the way to the segmenter. Sessions are not here at all, by design — a
+read path applies on the way to the segmenter. Sessions are not here at all, by design - a
 `sessions` table would become the thing clients trusted, and then a taxonomy change would
 have to migrate it instead of simply re-deriving it.
 
@@ -139,8 +139,8 @@ class EventStore:
 
         A conflict is still allowed to improve the stored row. A device that emitted a
         Tier 1 sample and then escalated to Tier 2 for the same instant has a better answer
-        for that instant, and `Tier`'s ordering says so; it is counted as a duplicate — the
-        contract has nowhere else to put it — but the better label wins.
+        for that instant, and `Tier`'s ordering says so; it is counted as a duplicate - the
+        contract has nowhere else to put it - but the better label wins.
         """
         if not events:
             return (0, 0)

@@ -9,7 +9,7 @@ The day is deliberately awkward in every way the segmenter has to cope with:
 - a session that spans two processes (the editor then the terminal, both "deep work"),
   which a tracker keyed on application name splits in half;
 - a device handoff, with the gym logged by voice from a phone while the desktop is silent;
-- genuine idle gaps — commute, a walk, lunch — that must close sessions rather than be
+- genuine idle gaps - commute, a walk, lunch - that must close sessions rather than be
   absorbed into them;
 - two categories that recur in separate blocks (doomscrolling before and after lunch), so
   the summary has to total across sessions rather than per session;

@@ -2,7 +2,7 @@
 
 `regions.py` measures churn per tracked region using SAM 3.1, which is the better signal
 because it can say *which* part of the screen was replaced. It needs a SAM endpoint, and
-as of this writing none is reachable with the credentials this project has — Baseten's
+as of this writing none is reachable with the credentials this project has - Baseten's
 Model APIs serve text models only, and there is no GPU here to self-host on.
 
 So this computes the same underlying quantity the cheap way: how much of the screen's
@@ -19,7 +19,7 @@ That is this measurement, named by the model that wanted it.
 
 Comparing consecutive frames naively means keeping the previous frame, which would break
 the capture invariant: one in-memory buffer, overwritten, nothing retained. So only a
-digest survives a sample — the frame reduced to `COLS x ROWS` mean luminances, 2,304
+digest survives a sample - the frame reduced to `COLS x ROWS` mean luminances, 2,304
 bytes. A screen cannot be reconstructed from it, it never touches disk, and it is never
 sent anywhere. The signal is strictly cheaper *and* strictly less revealing than the SAM
 path it stands in for, which is the unusual case where the fallback is better on privacy
@@ -41,7 +41,7 @@ reads as 100% churn on an untouched screen, which is indistinguishable from a fe
 scrolled. Set this to 0 and `test_a_uniform_dimming_is_not_churn` fails.
 
 Small local changes need no threshold to be harmless. A blinking caret lights one or two
-cells out of 2,304, so the ratio alone puts it three orders of magnitude below `STATIC` —
+cells out of 2,304, so the ratio alone puts it three orders of magnitude below `STATIC` -
 the grid does that work, not this number. Raising this to chase such changes would start
 discarding real text replacement instead.
 """
@@ -68,7 +68,7 @@ def changed_cells(previous: Digest, current: Digest, *, delta: int = CELL_DELTA)
     """Cells whose content was replaced between the two frames.
 
     Returns an empty grid on a length mismatch rather than raising. A resolution change
-    mid-session — a monitor switch, a window moving to a different display — makes the two
+    mid-session - a monitor switch, a window moving to a different display - makes the two
     digests incomparable, and reporting "no churn" for one sample is the right cost. The
     alternative, a spurious 100% reading, would look exactly like a feed being scrolled.
     """

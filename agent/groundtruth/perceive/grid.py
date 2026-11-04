@@ -1,15 +1,15 @@
 """Coarse occupancy grids for masks.
 
-Churn is a Jaccard distance between consecutive masks, and the naive representation — the
-set of occupied pixels — does not survive contact with a real screen. A 1024x576 frame has
+Churn is a Jaccard distance between consecutive masks, and the naive representation - the
+set of occupied pixels - does not survive contact with a real screen. A 1024x576 frame has
 590,000 pixels, and SAM 3.1 multiplexes up to 16 regions, so a single comparison could
 touch nine million coordinates every couple of seconds. On a machine that is supposed to
 be running quietly in the background, that is not acceptable.
 
 So masks are reduced to a coarse grid before comparison. This is sound rather than merely
 cheap: Jaccard is scale-invariant, so the ratio a coarse grid produces closely tracks the
-one full resolution would give. What is lost is sub-cell detail — a caret blinking, one
-word changing — and losing that is a feature. Those are not the changes that distinguish
+one full resolution would give. What is lost is sub-cell detail - a caret blinking, one
+word changing - and losing that is a feature. Those are not the changes that distinguish
 reading from scrolling, and treating them as churn would make every text editor look like
 a feed.
 """
@@ -70,7 +70,7 @@ def from_bbox(
     """Every cell a bounding box touches.
 
     The fallback for a backend that returns boxes rather than masks. Churn computed from
-    boxes is far weaker — a feed scrolling inside a fixed box shows no change at all — so
+    boxes is far weaker - a feed scrolling inside a fixed box shows no change at all - so
     a caller relying on this should expect `motion.classify` to return `unclear` often,
     which is the honest outcome rather than a degraded guess.
     """

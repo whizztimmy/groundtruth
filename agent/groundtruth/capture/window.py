@@ -1,6 +1,6 @@
 """Tier 1 capture: foreground window and owning process.
 
-Free, synchronous, and runs on every sample. Produces an Observation with no label —
+Free, synchronous, and runs on every sample. Produces an Observation with no label -
 deciding what the activity *is* belongs to the escalation policy and Tier 2.
 
 Windows-only for now. The Observation contract is platform-neutral, so an Android or
@@ -35,7 +35,7 @@ def foreground() -> Observation:
     """Sample the current foreground window.
 
     Returns an Observation with `process` and `window_title` populated. Both may be None
-    when no window holds focus — a locked screen or a desktop with nothing open — which
+    when no window holds focus - a locked screen or a desktop with nothing open - which
     the segmenter reads as idle rather than as an activity.
     """
     if not _AVAILABLE:
@@ -66,7 +66,7 @@ def idle_seconds() -> float:
 
     Exposed raw rather than only as a boolean because it answers two different questions.
     A long value means the user is away. A *short* value, sampled alongside screen churn,
-    means the user is causing the change they are looking at — which is what separates
+    means the user is causing the change they are looking at - which is what separates
     scrolling a feed from watching a build log scroll itself.
 
     Uses GetLastInputInfo, which counts input across the whole session rather than just
@@ -107,7 +107,7 @@ def input_active(within_s: float) -> bool:
     """Whether any input arrived in roughly the last `within_s` seconds.
 
     Called with the sample interval, this answers "did the user do something between the
-    previous sample and this one" — the per-sample signal the motion model pairs with
+    previous sample and this one" - the per-sample signal the motion model pairs with
     churn.
     """
     return idle_seconds() < within_s

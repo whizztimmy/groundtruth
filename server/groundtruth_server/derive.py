@@ -2,7 +2,7 @@
 
 Everything the API returns is derived here, and in this order, every time a request
 arrives. Nothing is cached. That is affordable because the work is one index range scan and
-a linear pass, and it is necessary because the alternative — a `sessions` table — is the
+a linear pass, and it is necessary because the alternative - a `sessions` table - is the
 design mistake the architecture is built to avoid: the moment sessions are stored, renaming
 a category becomes a migration instead of a re-read.
 
@@ -46,7 +46,7 @@ RESOLVE_CONTEXT = timedelta(hours=6)
 
 Resolving a span can make it merge with its neighbours, so the answer has to be derived from
 a window wider than the span itself. Six hours bounds the work while comfortably exceeding
-any session an idle gap of two minutes could hold together — a longer unbroken span would
+any session an idle gap of two minutes could hold together - a longer unbroken span would
 mean the agent sampled continuously for six hours without a single two-minute pause.
 """
 
@@ -73,8 +73,8 @@ def derive_spans(
 
     The window bounds which *events* are read, so a session running across `start` is
     reported from `start` rather than from its true beginning. That is the right answer for a
-    windowed query — the alternative is a response whose first row reaches outside the range
-    the caller asked about — but it does mean two adjacent windows do not simply concatenate.
+    windowed query - the alternative is a response whose first row reaches outside the range
+    the caller asked about - but it does mean two adjacent windows do not simply concatenate.
     """
     events = store.events_between(start, end)
     if not events:
@@ -254,7 +254,7 @@ def resolve_span(
 ) -> Span | None:
     """Record the user's answer and return the session it re-segments into.
 
-    Returns None when the id matches no uncertain span and no previous answer — the caller
+    Returns None when the id matches no uncertain span and no previous answer - the caller
     turns that into a 404.
 
     A repeat POST for the same span is not an error. The span is no longer uncertain after

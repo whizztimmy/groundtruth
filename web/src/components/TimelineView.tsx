@@ -23,7 +23,7 @@ type Hovered =
  * Sessions and uncertain spans are drawn on separate tracks rather than mixed into
  * one, because they are different kinds of claim. A session is a label the
  * classifier will stand behind; an uncertain span is an admission. The gaps the
- * admissions leave in the session lane are legible on purpose — you can see what
+ * admissions leave in the session lane are legible on purpose - you can see what
  * the system does not know, which is the opposite of how a tracker usually reads.
  */
 export function TimelineView({ day }: Props) {
@@ -95,7 +95,7 @@ export function TimelineView({ day }: Props) {
                     onBlur={() => setHovered(null)}
                   >
                     <span className="visually-hidden">
-                      {session.label} — {session.category}, {timeRange(session.start_ts, session.end_ts)},{" "}
+                      {session.label} - {session.category}, {timeRange(session.start_ts, session.end_ts)},{" "}
                       {duration(session.duration_s)}, confidence {percent(session.confidence)}. {session.evidence_summary}
                     </span>
                     {/* The label rides inside the block only where it fits; everything
@@ -164,7 +164,7 @@ function Tooltip({ hovered }: { hovered: Hovered }) {
         <p className="tlTip__range tnum">{timeRange(span.start_ts, span.end_ts)}</p>
         <p className="tlTip__evidence">{span.evidence}</p>
         <p className="tlTip__foot">
-          Suggested: {span.suggestions.join(" or ")} — answerable in the uncertain queue.
+          Suggested: {span.suggestions.join(" or ")} - answerable in the uncertain queue.
         </p>
       </div>
     );

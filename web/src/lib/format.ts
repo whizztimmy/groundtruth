@@ -43,7 +43,7 @@ export function dayLabel(iso: string): string {
 }
 
 export function timeRange(startIso: string, endIso: string): string {
-  return `${clockTime(startIso)}–${clockTime(endIso)}`;
+  return `${clockTime(startIso)}-${clockTime(endIso)}`;
 }
 
 /** The day's offset, shown once in the header so the clock is never ambiguous. */
@@ -55,7 +55,7 @@ export function offsetLabel(iso: string): string {
 }
 
 /**
- * Durations read as "4h 12m" — the unit the product argues about. Below a minute
+ * Durations read as "4h 12m" - the unit the product argues about. Below a minute
  * seconds are shown, because rounding to "0m" would read as nothing at all.
  */
 export function duration(seconds: number): string {
@@ -67,7 +67,7 @@ export function duration(seconds: number): string {
   return h > 0 ? `${h}h ${String(m).padStart(2, "0")}m` : `${m}m`;
 }
 
-/** Compact form for dense places — tooltips, tick labels, inline counts. */
+/** Compact form for dense places - tooltips, tick labels, inline counts. */
 export function durationCompact(seconds: number): string {
   const s = Math.max(0, Math.round(seconds));
   if (s < 60) return `${s}s`;

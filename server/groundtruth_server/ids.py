@@ -5,7 +5,7 @@ sequence: the same day re-segmented tomorrow has to produce the same ids it prod
 today, or every poll from the dashboard looks like a fresh set of sessions and the client
 loses track of what it was already showing.
 
-So ids are *derived* too — a ULID-shaped string whose timestamp half comes from the span's
+So ids are *derived* too - a ULID-shaped string whose timestamp half comes from the span's
 start and whose random half is a hash of the span's identity. That keeps the two properties
 the contract's `s_01JB...` examples imply (sortable by time, opaque to the client) while
 being a pure function of the events underneath.
@@ -39,7 +39,7 @@ def derive_id(prefix: str, start: datetime, *identity: str) -> str:
     """Build a stable id for a derived span.
 
     `identity` is everything that makes this span the span it is. Two derivations that
-    disagree about any of it should produce different ids — a re-labelled span really is a
+    disagree about any of it should produce different ids - a re-labelled span really is a
     different session, and pretending otherwise would let a stale client cache a label the
     server no longer holds.
 

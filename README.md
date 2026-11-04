@@ -7,14 +7,14 @@
 That link shows a sample day, and says so: the header badge reads `sample day` rather
 than `live`. There is no server behind it on purpose. The sync server binds to
 loopback, has no authentication, and its events carry descriptions of whatever was on
-screen — so the version with real data only ever runs on the operator's own machine.
+screen - so the version with real data only ever runs on the operator's own machine.
 That is not a deployment gap; it is the product.
 
 Every activity tracker ever built classifies your time by *application name*. So Chrome is
 "productive" whether you were reading API docs or three hours deep in a feed. VS Code is
 "coding" whether you were shipping or staring at a file you opened an hour ago. The
-distinction people actually care about — focused work vs. doomscrolling, devotion vs.
-idle reading — is **semantic**, and no amount of window-title metadata can recover it.
+distinction people actually care about - focused work vs. doomscrolling, devotion vs.
+idle reading - is **semantic**, and no amount of window-title metadata can recover it.
 
 GroundTruth replaces app-name heuristics with an always-on agent that understands what you
 were *doing*.
@@ -71,7 +71,7 @@ about what those tools still do better.
 The most sensitive data a person has is their own screen. A tracker that understands your
 screen is only acceptable if that understanding never reaches anyone who could keep it.
 
-So GroundTruth classifies with **Muse Spark Open** — Meta's open-weights reasoning model —
+So GroundTruth classifies with **Muse Spark Open** - Meta's open-weights reasoning model -
 rather than a vendor-managed endpoint. Frames are perceived and discarded; only derived
 labels are ever persisted or synced.
 
@@ -82,11 +82,11 @@ vendor-managed endpoint that could retain your screen.
 
 The agent enforces this rather than promising it. Sending a frame to a `managed` backend
 raises `PlacementViolation` instead of succeeding, and a backend with no declared
-placement defaults to `managed` — so a misconfiguration costs a refused call, never a
+placement defaults to `managed` - so a misconfiguration costs a refused call, never a
 silent leak. See [Placement](ARCHITECTURE.md#placement).
 
 Two further controls follow from the same argument. Frames are reduced to 1024px before
-they leave the capture module, which costs nothing in accuracy (measured — see
+they leave the capture module, which costs nothing in accuracy (measured - see
 [validation](docs/validation.md)) and strips fine body text. And because a *description*
 of a screen is not a screen, derived labels are scrubbed of credential-shaped text before
 they are stored, at the single gate every persisted string passes through.
@@ -104,12 +104,12 @@ GroundTruth only climbs when the rung below is genuinely ambiguous.
 |------|--------|------|-----------|--------|
 | 1 | Foreground window, process name, and whether anybody is actually there | Free | Always | **Running** |
 | 2 | Screen frame + local motion signal, classified by **Muse Spark Open** | Rented GPU | Tier 1 is ambiguous (e.g. a browser) | **Running** |
-| 3 | Check-in you state yourself, interpreted by **Muse Spark** | Remote, rare | Off-screen time — the gym, a commute, a walk | **Running** (typed; audio transcription unverified) |
+| 3 | Check-in you state yourself, interpreted by **Muse Spark** | Remote, rare | Off-screen time - the gym, a commute, a walk | **Running** (typed; audio transcription unverified) |
 | 4 | Weekly synthesis via **Muse Spark** on the Meta Model API | Remote, weekly | On request | **Running** |
 
 Photoshop is unambiguous; a browser never is. A process-name table resolves the
 unambiguous majority for free, which is what makes always-on operation affordable, and an
-escalation policy decides the rest — rate limit, then ambiguous process, then unusable
+escalation policy decides the rest - rate limit, then ambiguous process, then unusable
 title, then unrecognised process, then a low-confidence streak, then periodic
 re-verification.
 
@@ -153,11 +153,11 @@ The unit of attention is not the window. A developer with docs on one monitor an
 on the other is the normal case, and every existing tracker scores that as 100% of
 whichever window held focus.
 
-A single frame also cannot separate reading from scrolling — the same page, the same URL,
+A single frame also cannot separate reading from scrolling - the same page, the same URL,
 the same layout. What separates them is *content replacement over time*: a feed replaces
 what sits in a region while reading holds it. So Tier 2 pairs a churn measurement with
-input activity and hands the classifier a two-axis prior — scrolling, playing, reading or
-working — phrased as an observation rather than a verdict, so the model can overrule it
+input activity and hands the classifier a two-axis prior - scrolling, playing, reading or
+working - phrased as an observation rather than a verdict, so the model can overrule it
 when a terminal scrolls during real work.
 
 The classifier asked for this signal by name before it was built. Both abstentions in the
@@ -172,13 +172,13 @@ the single-buffer capture invariant holds.
 
 **What is written but deliberately not used** is the SAM 3.1 path. `perceive/regions.py` uses
 SAM 3.1's object multiplexing (up to 16 objects per forward pass) to track named screen
-regions — editor, terminal, feed, video player — so churn can be attributed to *which*
+regions - editor, terminal, feed, video player - so churn can be attributed to *which*
 region moved, which the whole-screen measurement cannot do. It is implemented and
 unit-tested against synthetic detections, and it has never processed a real frame.
 
 That is a choice, not a shortage. `sam-3.1` **is** served on the Meta Model API, via
 `/v1/responses`. But that is a vendor-`managed` endpoint, and SAM is the one component
-that receives raw frames — so routing to it is exactly what the placement invariant above
+that receives raw frames - so routing to it is exactly what the placement invariant above
 exists to refuse. Using it would mean either weakening the invariant or declaring a
 vendor endpoint `self_hosted`, which would be a lie in a config file. The privacy claim
 costs something here, and this is what it costs.
@@ -195,8 +195,8 @@ path would answer it better, and is not currently running.
 
 | Model | Role | Placement |
 |-------|------|-----------|
-| **Muse Spark Open** (`muse-spark-open-1026`) | Tier 2 activity classification and session labelling | `self_hosted` — open weights on rented infrastructure |
-| **Muse Spark 1.3** (Meta Model API) | Tier 4 weekly synthesis and pattern reasoning | `managed` — receives category names and durations, never a frame, title or transcript |
+| **Muse Spark Open** (`muse-spark-open-1026`) | Tier 2 activity classification and session labelling | `self_hosted` - open weights on rented infrastructure |
+| **Muse Spark 1.3** (Meta Model API) | Tier 4 weekly synthesis and pattern reasoning | `managed` - receives category names and durations, never a frame, title or transcript |
 
 **Deliberately unused:** SAM 3.1, which is available on the Meta Model API but only as a
 managed endpoint, and frames may not go to one. See above.
@@ -212,7 +212,7 @@ leg is one function away whenever the right surface is found.
 |----------|---------------|--------|
 | Windows | Tiers 1, 2 and 4 | **Running** |
 | Android | `UsageStatsManager` + voice check-in | Not started |
-| iOS | Shortcuts automations + Focus triggers + voice | Not started — and constrained, see below |
+| iOS | Shortcuts automations + Focus triggers + voice | Not started - and constrained, see below |
 
 Nothing mobile ships in this submission. The agent, the sync server and the dashboard are
 desktop only.
@@ -229,11 +229,11 @@ restriction does not exist.
 |------|----------|-------|
 | `agent/` | Capture, presence, activity metering, escalation, perception, classification, sync | 296 |
 | `server/` | Event ingest, idempotent on `(device_id, ts)`, session segmentation, derivation | 144 |
-| `web/` | Dashboard: day timeline, the contrast view, the uncertain queue | — |
+| `web/` | Dashboard: day timeline, the contrast view, the uncertain queue | - |
 | `scripts/` | Pre-commit credential scanner | 35 |
 
 `docs/validation.md` records what was actually tested and what it showed, including the
-results that contradicted the design — a still frame being sufficient where churn was
+results that contradicted the design - a still frame being sufficient where churn was
 assumed necessary, confidence turning out to be calibrated after it was assumed constant,
 and a reasoning model spending its whole token budget before answering.
 
@@ -261,13 +261,13 @@ cd agent && ./.venv/Scripts/python.exe -m groundtruth.checkin --text "at the gym
 ```
 
 Tier 2 opts in rather than out. Leave `TIER2_ENABLED` unset and the agent captures no
-frames at all — a misconfigured agent should see less than intended, never more.
+frames at all - a misconfigured agent should see less than intended, never more.
 
 ---
 
 ## Hackathon disclosure
 
-Built for the **Meta Global AI Developer Hackathon** (Oct 26 – Nov 4, 2026), Indie
+Built for the **Meta Global AI Developer Hackathon** (Oct 26 - Nov 4, 2026), Indie
 Developer track.
 
 **100% of the code in this repository was written during the hackathon window.** The
@@ -277,4 +277,4 @@ and the full history is public.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT - see [LICENSE](LICENSE).

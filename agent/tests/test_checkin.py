@@ -2,7 +2,7 @@
 
 Two things carry the weight here. The first is that a check-in records only what somebody
 said: a guessed duration becomes a number on their timeline that nobody uttered, and they
-will plan around it. The second is that refusing is a normal outcome rather than a fault —
+will plan around it. The second is that refusing is a normal outcome rather than a fault -
 the person is standing at the desk and can say it again, so every unclear case should come
 back with something to say rather than something recorded.
 """
@@ -82,7 +82,7 @@ class TestTheTaxonomyIsSplitByTier:
 
     def test_order_is_preserved(self):
         """The prompt lists these, and a stable order keeps prompts comparable between
-        runs — which matters because run-to-run variance is already the largest source of
+        runs - which matters because run-to-run variance is already the largest source of
         noise in this system."""
         combined = checkin_categories(DEFAULT_CATEGORIES)
         assert combined[: len(DEFAULT_CATEGORIES)] == DEFAULT_CATEGORIES
@@ -187,7 +187,7 @@ class TestInterpret:
 
 class TestToEvents:
     def test_events_carry_no_process_or_window(self):
-        """Not missing data — the absence is the entire point of this tier, and it is what
+        """Not missing data - the absence is the entire point of this tier, and it is what
         the dashboard keys on to show a span as reported rather than observed."""
         for event in to_events(checkin(), device_id="phone-1"):
             assert event.process is None

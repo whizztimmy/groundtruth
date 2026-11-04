@@ -1,7 +1,7 @@
 """Shared contracts.
 
 Every tier, the segmenter and the sync client all speak in these types. They are the
-boundary between components that are built independently, so changes here ripple — treat
+boundary between components that are built independently, so changes here ripple - treat
 them as the stable surface and keep behaviour in the modules that produce them.
 """
 
@@ -25,7 +25,7 @@ class Tier(IntEnum):
 
 
 class Confidence(float, Enum):
-    """Thresholds, not a closed set — classifiers return arbitrary floats in [0, 1].
+    """Thresholds, not a closed set - classifiers return arbitrary floats in [0, 1].
 
     ACCEPT and below-ACCEPT are the only distinctions the pipeline makes. Everything
     under RETRY is re-asked with escalated reasoning effort before being stored.
@@ -72,7 +72,7 @@ class Observation:
 
     Captured on every sample, including Tier 1 ones that never reach a model, because it
     is only meaningful as a run. Paired with region churn it separates a feed being
-    pulled past from a build log scrolling itself — see `perceive/motion.py`.
+    pulled past from a build log scrolling itself - see `perceive/motion.py`.
 
     None means the platform could not report it, which is distinct from False.
     """
@@ -86,8 +86,8 @@ class Observation:
     carried separately rather than as a synthetic whole-screen `Region` so that nothing
     downstream can mistake it for something SAM tracked.
 
-    None means it could not be measured — the first frame of a session, or a resolution
-    change — which is distinct from 0.0, a screen that genuinely did not move.
+    None means it could not be measured - the first frame of a session, or a resolution
+    change - which is distinct from 0.0, a screen that genuinely did not move.
     """
 
     @property

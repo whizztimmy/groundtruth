@@ -5,7 +5,7 @@ train for two hours must not come back with a two-hour hole in the day. So every
 written to disk *before* any attempt to send it, and removed only once the server has
 confirmed receipt.
 
-That ordering gives at-least-once delivery — a crash between send and confirm resends the
+That ordering gives at-least-once delivery - a crash between send and confirm resends the
 batch. Which is fine, and deliberate: `POST /events` is idempotent on `(device_id, ts)`,
 so duplicates are counted rather than rejected. Choosing at-least-once over at-most-once
 is the right trade when the failure modes are "one row counted twice" versus "an hour of
@@ -15,7 +15,7 @@ Only derived labels are stored here. No frame, mask, or pixel-derived feature is
 written to disk anywhere in this project.
 
 Those labels are still text a model wrote while looking at a screen, so `append` is the
-gate where credential-shaped substrings are scrubbed out — see `redact.py`. It is done
+gate where credential-shaped substrings are scrubbed out - see `redact.py`. It is done
 here rather than at the classifier because this is the single point every stored and
 synced string passes through, and a control placed anywhere upstream can be bypassed by
 the next caller that forgets it.
@@ -54,7 +54,7 @@ class EventBuffer:
 
     SQLite rather than a JSONL file because a half-written line after a hard power loss is
     a corrupt record that has to be hand-parsed, while SQLite's write-ahead log gives the
-    same durability with recovery already solved. The dependency is free — it is stdlib.
+    same durability with recovery already solved. The dependency is free - it is stdlib.
     """
 
     def __init__(self, path: Path | str) -> None:
@@ -110,7 +110,7 @@ class EventBuffer:
         """Oldest `limit` events, paired with the row ids needed to confirm them.
 
         Does not remove anything. Removal is `confirm`, and only after the server has
-        acknowledged — that gap is what makes delivery at-least-once rather than
+        acknowledged - that gap is what makes delivery at-least-once rather than
         at-most-once.
         """
         rows = self._conn.execute(

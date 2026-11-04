@@ -110,8 +110,8 @@
 }
 
 /* The label rides on a surface chip rather than directly on the fill. Text on a
-   saturated mark cannot be guaranteed legible in both modes — some category steps
-   are too light for white and too dark for black — so the chip restores a known
+   saturated mark cannot be guaranteed legible in both modes - some category steps
+   are too light for white and too dark for black - so the chip restores a known
    surface and the label keeps the ordinary ink token on top of it. */
 .tl__blockLabel {
   display: block;

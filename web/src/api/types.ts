@@ -8,7 +8,7 @@
  * at the edge (see `lib/day.ts`) so the contract stays recognisable here.
  */
 
-/** `GET /sessions` — a derived span. Sessions are never written by clients. */
+/** `GET /sessions` - a derived span. Sessions are never written by clients. */
 export interface Session {
   id: string;
   start_ts: string;
@@ -45,7 +45,7 @@ export interface Summary {
   naive_by_process: SummaryGroup[];
 }
 
-/** `GET /uncertain` — a span the classifier declined to guess at. */
+/** `GET /uncertain` - a span the classifier declined to guess at. */
 export interface UncertainSpan {
   id: string;
   start_ts: string;

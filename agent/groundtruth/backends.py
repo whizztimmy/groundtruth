@@ -36,7 +36,7 @@ class Placement(str, Enum):
     """On this machine. Nothing leaves the device."""
 
     SELF_HOSTED = "self_hosted"
-    """Open weights on infrastructure the operator controls and can tear down —
+    """Open weights on infrastructure the operator controls and can tear down -
     Baseten, Modal, a rented GPU. Not the user's machine, but not a third party's
     training corpus either."""
 
@@ -90,7 +90,7 @@ class PlacementViolation(BackendError):
 class Backend:
     """One model endpoint.
 
-    `placement` is not cosmetic — it gates what this backend may be shown.
+    `placement` is not cosmetic - it gates what this backend may be shown.
     """
 
     base_url: str
@@ -156,7 +156,7 @@ class Backend:
 
 
 # Vendor suffixes that mark a discounted tier trained on its inputs. Matched on the
-# model id because that is the only place the distinction appears — the endpoint, the
+# model id because that is the only place the distinction appears - the endpoint, the
 # auth and the wire format are identical to the standard tier.
 TRAINING_TIER = re.compile(r"-(?:contributor|training|community)(?![a-z])")
 
@@ -185,7 +185,7 @@ async def chat(
     and the playground's default of 1 is wrong for this use.
 
     Retries on transient status codes with jittered exponential backoff. Jitter matters
-    because the agent samples on a fixed cadence — without it, a blip would resynchronise
+    because the agent samples on a fixed cadence - without it, a blip would resynchronise
     every pending retry into a thundering herd.
     """
     payload: dict[str, Any] = {
@@ -315,13 +315,13 @@ def _extract_text(body: dict[str, Any]) -> str:
             return joined
 
     # Reasoning models spend budget thinking before they emit anything, so a tight
-    # max_tokens yields a null content and a finish_reason of "length" — a silent,
+    # max_tokens yields a null content and a finish_reason of "length" - a silent,
     # confusing failure that looks like a broken endpoint rather than a cramped one.
     # Muse Spark Open does exactly this. Say so plainly instead of reporting a type.
     if choice.get("finish_reason") == "length":
         raise TruncatedBeforeAnswer(
             f"{backend_name(body)} ran out of tokens before emitting content. "
-            "Reasoning models consume the budget thinking first — raise max_tokens, "
+            "Reasoning models consume the budget thinking first - raise max_tokens, "
             "or lower reasoning effort."
         )
 

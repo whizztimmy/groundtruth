@@ -1,8 +1,8 @@
 """Domain types, mirroring `agent/groundtruth/types.py` field for field.
 
 These are re-declared rather than imported. The agent and the server are separate
-distributions with separate dependency sets — the agent pulls in `mss`, `pillow` and
-`pywin32`, none of which belong on a sync host — so an import would couple a deployment to
+distributions with separate dependency sets - the agent pulls in `mss`, `pillow` and
+`pywin32`, none of which belong on a sync host - so an import would couple a deployment to
 a platform it does not run on.
 
 The cost of that decision is drift, so it is paid down with a test: `tests/test_parity.py`
@@ -22,7 +22,7 @@ UNCERTAIN = "uncertain"
 survives derivation and can be put to the user as a question."""
 
 OFF_SCREEN_PROCESS = "(off-screen)"
-"""Bucket for coverage with no foreground process — Tier 3 voice check-ins.
+"""Bucket for coverage with no foreground process - Tier 3 voice check-ins.
 
 Only used in `naive_by_process`. An app-name tracker has no row for the gym, so the honest
 rendering of its blind spot is a named bucket rather than silently dropped time: dropping it
@@ -138,7 +138,7 @@ def evidence_summary(lines: Sequence[str]) -> str:
     """Join a span's distinct evidence into one caption, truncated on a word boundary.
 
     Truncating mid-word reads as corruption rather than as brevity, and this string is the
-    user's only window into why a label was chosen — it has to look deliberate.
+    user's only window into why a label was chosen - it has to look deliberate.
     """
     joined = " ".join(line.strip() for line in lines if line.strip())
     if len(joined) <= EVIDENCE_SUMMARY_CHARS:

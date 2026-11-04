@@ -18,7 +18,7 @@ interface Props {
  * The contrast view: the same day read twice.
  *
  * The two decompositions are stacked rather than placed in two columns, because
- * both describe the *same* total — aligning them at the same width means equal
+ * both describe the *same* total - aligning them at the same width means equal
  * length is equal time, and the eye compares the cuts directly with no axis to
  * reconcile. The ranked detail below is side by side, where the comparison is
  * between rows rather than between partitions.
@@ -26,7 +26,7 @@ interface Props {
  * Note what the contract does and does not allow here. `naive_by_process` and
  * `groups` are two independent decompositions of one window; nothing links a
  * process to the categories it contained. So this view never claims that
- * "chrome.exe became research and doomscrolling" — it claims only that the same
+ * "chrome.exe became research and doomscrolling" - it claims only that the same
  * eight hours answer differently depending on which question you ask, which is
  * both the honest reading and the stronger one.
  */
@@ -38,8 +38,8 @@ export function ContrastView({ day, onOpenUncertain }: Props) {
   const truth = groupsByDuration(summary.groups);
   const unanswered = uncertainTotal(summary.groups);
 
-  // Both ranked lists are drawn against one scale — the largest row on either
-  // side — so a bar in the left column is directly comparable to one on the right.
+  // Both ranked lists are drawn against one scale - the largest row on either
+  // side - so a bar in the left column is directly comparable to one on the right.
   const scale = Math.max(...naive.map((g) => g.share), ...truth.map((g) => g.share), 0.0001);
 
   return (
@@ -70,7 +70,7 @@ export function ContrastView({ day, onOpenUncertain }: Props) {
           {/* Drawn divided and labelled like the bar below it, but in a single
               neutral: an application name carries no information about what was
               done, so it is given no colour to imply that it does. The absence is
-              the argument, and it has to be a visible absence — hence the same
+              the argument, and it has to be a visible absence - hence the same
               anatomy, minus the meaning. */}
           <StackedDay
             segments={toSegments(naive, () => "var(--naive-mark)")}
@@ -80,7 +80,7 @@ export function ContrastView({ day, onOpenUncertain }: Props) {
 
         <div className="contrast__pivot" aria-hidden="true">
           <span className="contrast__pivotLine" />
-          <span className="contrast__pivotText">same {duration(summary.total_tracked_s)}, same device — only the question changed</span>
+          <span className="contrast__pivotText">same {duration(summary.total_tracked_s)}, same device - only the question changed</span>
           <span className="contrast__pivotLine" />
         </div>
 
@@ -190,7 +190,7 @@ function RankedList({
  * The first frame is deliberately the un-revealed state so the transition has
  * somewhere to come from; a short delay lets layout settle first, otherwise the
  * sweep starts before the bar has its final width. Reduced-motion users get the
- * final state immediately — the global reduce rule collapses the durations, and
+ * final state immediately - the global reduce rule collapses the durations, and
  * starting revealed means they never see the neutral intermediate at all.
  */
 function useReveal() {

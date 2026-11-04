@@ -2,7 +2,7 @@
 
 `naive_by_process` is the product's whole argument rendered as a second list: the same
 seconds, grouped by application name instead of by activity. It is computed here, on the
-server, for a reason the contract states and this module has to honour — if the dashboard
+server, for a reason the contract states and this module has to honour - if the dashboard
 derived it from the sessions it was given, the comparison would be between real data and
 something the dashboard made up, and the one number the user is being asked to distrust
 would be the one number nobody checked.
@@ -74,8 +74,8 @@ def summarize(spans: Iterable[Span], *, group_by: GroupBy = "category") -> Summa
 
     Both groupings are accumulated per *event*, not per session, and for `group_by="label"`
     that is the difference between a right answer and a plausible one. A session is
-    homogeneous in category but not in label — "reading API documentation" and "comparing
-    inference providers" are both research and can sit in one span — so totalling by the
+    homogeneous in category but not in label - "reading API documentation" and "comparing
+    inference providers" are both research and can sit in one span - so totalling by the
     span's headline label would quietly credit the whole session to whichever label held the
     longer stretch. Per event, the minority label keeps its minutes.
 

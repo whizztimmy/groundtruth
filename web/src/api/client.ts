@@ -135,7 +135,7 @@ function reasonFor(error: unknown): string {
  * that process and returns the re-segmented session.
  *
  * In fixture mode there is nothing to POST to, so the span is resolved locally and
- * the session that *would* come back is constructed from the span's own timestamps —
+ * the session that *would* come back is constructed from the span's own timestamps -
  * no figure is invented, and the caller is told it was local so the UI can say so.
  */
 export async function resolveUncertain(

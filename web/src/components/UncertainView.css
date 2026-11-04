@@ -107,7 +107,7 @@
   color: var(--ink-secondary);
 }
 
-/* The hatch marks the evidence as belonging to an unanswered span — the same
+/* The hatch marks the evidence as belonging to an unanswered span - the same
    texture the timeline uses for these spans, so the two views agree. */
 .uncCard__evidenceMark {
   position: absolute;

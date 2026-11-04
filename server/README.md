@@ -64,7 +64,7 @@ pytest
 | `GROUNDTRUTH_SAMPLE_COVERAGE_S` | `60` | Most seconds one sample may be credited with. |
 
 The thresholds are configuration because they are claims about a person's habits rather than
-facts about software. `segment.py` never reads the environment itself — the values are read
+facts about software. `segment.py` never reads the environment itself - the values are read
 at the edge and passed down, which is what lets the segmenter be tested without one.
 
 ## Two things worth knowing before changing anything
@@ -83,7 +83,7 @@ OpenAPI schema so that adding one fails the suite.
 
 ## The fixture day
 
-`fixtures/day.json` is one realistic eight-hour day — 480 events across two devices. It is
+`fixtures/day.json` is one realistic eight-hour day - 480 events across two devices. It is
 the dashboard's development data, so its shape is an interface: each entry of `batches` is
 exactly a `POST /events` body as the contract defines it, and the loader validates it through
 the same models the API uses.

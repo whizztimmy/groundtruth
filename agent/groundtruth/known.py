@@ -1,12 +1,12 @@
 """Processes whose activity the application name genuinely does describe.
 
 The product's whole argument is that an application name is a poor proxy for an activity.
-That argument is about applications that can host *anything* — a browser, a terminal, a
+That argument is about applications that can host *anything* - a browser, a terminal, a
 chat client. It is not true of every application: a photo editor in the foreground really
 does mean photo editing, and spending a model call to discover that would be waste.
 
 So this table is the Tier 1 labeller, and it is what makes the claim in `ARCHITECTURE.md`
-true — that roughly 70% of a day resolves for free. A process here is resolved without
+true - that roughly 70% of a day resolves for free. A process here is resolved without
 ever looking at the screen, which is cheaper *and* more private than the alternative.
 
 Membership is a claim that the name is sufficient. When in doubt, leave a process out:

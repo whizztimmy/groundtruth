@@ -5,7 +5,7 @@ output continuously with nobody touching the keyboard, which produces exactly th
 instability that defines a social feed. Churn measures *that the screen changed*. It
 cannot say *who changed it*.
 
-Input rate answers that, and it is nearly free — `GetLastInputInfo` is already sampled for
+Input rate answers that, and it is nearly free - `GetLastInputInfo` is already sampled for
 idle detection. Pairing the two gives four quadrants rather than one axis:
 
                      │ little input          │ steady input
@@ -35,7 +35,7 @@ class Motion(str, Enum):
     """A coarse read of the screen-and-user pair.
 
     Deliberately coarse. This is a *prior* handed to the classifier, not a label shown to
-    anyone — "SCROLLING" is evidence that an activity is feed-like, not a finding that it
+    anyone - "SCROLLING" is evidence that an activity is feed-like, not a finding that it
     is doomscrolling. A terminal can scroll and still be work.
     """
 
@@ -95,7 +95,7 @@ def classify(samples: list[Sample], *, min_samples: int = MIN_SAMPLES) -> Motion
         return Motion.WORKING if driven else Motion.READING
 
     # Mixed or middling churn. Steady input with an unsettled screen is still recognisably
-    # work — switching panes, scrubbing a timeline, moving between files.
+    # work - switching panes, scrubbing a timeline, moving between files.
     if driven and any(s.churn > STATIC for s in recent):
         return Motion.WORKING
 

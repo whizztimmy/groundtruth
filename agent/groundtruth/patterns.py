@@ -1,8 +1,8 @@
 """Deterministic facts about a stretch of sessions.
 
 Everything a weekly review asserts numerically is computed here, in ordinary code, before
-any model sees it. The model's job is to interpret — to notice that deep work collapses
-on the days a certain meeting lands — never to add up minutes.
+any model sees it. The model's job is to interpret - to notice that deep work collapses
+on the days a certain meeting lands - never to add up minutes.
 
 That split is deliberate. A language model doing arithmetic over forty sessions will
 occasionally be wrong, and a review that misstates someone's own week by twenty minutes

@@ -1,7 +1,7 @@
 """Agent configuration, read once at startup.
 
 Everything here is environment-driven so that the same binary runs on a developer laptop
-with no GPU, on a workstation serving Glimmer locally, and against partner inference —
+with no GPU, on a workstation serving Glimmer locally, and against partner inference -
 without a code change. See `backends.Placement` for why that matters.
 """
 
@@ -29,7 +29,7 @@ def load_env_file(path: Path | None = None) -> bool:
     A tool that reports health must not be configured differently from the thing it
     reports on, which is why this is the single implementation and the scripts call it.
 
-    `setdefault` rather than assignment, so a variable exported in the shell still wins —
+    `setdefault` rather than assignment, so a variable exported in the shell still wins -
     that is how `TIER2_ENABLED=1` on the command line is meant to work.
     """
     path = path or Path(__file__).resolve().parents[2] / ".env"
@@ -98,7 +98,7 @@ class Config:
             sample_interval_s=_env_float("SAMPLE_INTERVAL_S", 2.0),
             # Five minutes, not two. Input idleness conflates "away from the machine"
             # with "reading something long", and reading is a category this product
-            # exists to measure — so a short timeout would systematically mislabel the
+            # exists to measure - so a short timeout would systematically mislabel the
             # thing it most needs to get right. Observed during a live run: a user
             # reading for two minutes was reported idle.
             #

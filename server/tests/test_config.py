@@ -1,7 +1,7 @@
 """Tests for environment configuration.
 
 Thin module, real failure mode: a threshold that arrives as something other than a number
-is not caught by anything downstream — it surfaces as a `TypeError` deep inside the
+is not caught by anything downstream - it surfaces as a `TypeError` deep inside the
 segmenter on the first request that compares a gap against it, long after startup looked
 fine. So the defaults are asserted to *be numbers*, not merely to be present.
 """
@@ -17,7 +17,7 @@ from groundtruth_server.segment import SegmentConfig
 
 
 def test_an_empty_environment_yields_working_defaults():
-    """Not just equal to the defaults — usable as numbers.
+    """Not just equal to the defaults - usable as numbers.
 
     `SegmentConfig` is a slotted dataclass, so reading a default off the class rather than
     off an instance returns the slot descriptor instead of the value. It compares equal to

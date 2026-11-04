@@ -4,7 +4,7 @@ What was actually tested, and what it showed. Recorded as it happened, including
 results that contradicted an assumption, because a design document that only records the
 beliefs that survived is not evidence of anything.
 
-## 2026-10-28 — Can a single frame separate reading from scrolling?
+## 2026-10-28 - Can a single frame separate reading from scrolling?
 
 **Why it mattered.** The architecture rests on the claim that an application name is a
 poor proxy for an activity, and that screen *content* is a better one. If a still frame is
@@ -15,7 +15,7 @@ through the Meta Model API playground in **separate chats**, so the model could 
 compare them. Separation matters: the agent classifies one frame at a time and never gets
 a contrast. Reasoning effort medium, the production classifier prompt verbatim.
 
-### A — x.com, "For you" feed
+### A - x.com, "For you" feed
 
 ```json
 {"category": "doomscrolling",
@@ -26,7 +26,7 @@ a contrast. Reasoning effort medium, the production classifier prompt verbatim.
               What's happening trending topics"}
 ```
 
-### B — substack.com, a long-form article
+### B - substack.com, a long-form article
 
 ```json
 {"category": "research",
@@ -40,12 +40,12 @@ a contrast. Reasoning effort medium, the production classifier prompt verbatim.
 ### What this showed
 
 **Both correct, and not by domain matching.** The first reading of result A was that the
-model had simply recognised `x.com` — which a URL blocklist could do without any model at
+model had simply recognised `x.com` - which a URL blocklist could do without any model at
 all. Result B rules that out: `substack.com` serves both a scrollable feed and long-form
 articles, so the domain carries no signal, and the model cited the article's title and the
 subject of its paragraphs. It read the page.
 
-Result A's evidence also went beyond the URL — "timeline posts, engagement counts, right
+Result A's evidence also went beyond the URL - "timeline posts, engagement counts, right
 sidebar trending" are **layout** observations. This is the encouraging part, because
 layout is what survives the 1024px reduction in `capture/screen.py` while fine body text
 does not.
@@ -58,24 +58,24 @@ Three things remain open, and the design should not claim otherwise:
 
 1. **Same-site, different-intent is untested.** X search results for a technical question
    versus the For You feed; a YouTube tutorial versus Shorts. These are the cases where
-   both URL and page structure are identical and only behaviour differs — the cases churn
+   both URL and page structure are identical and only behaviour differs - the cases churn
    exists for.
 2. **Downscaling is untested.** Both screenshots were full resolution. Production frames
    are reduced to 1024px wide. Layout should survive; the Substack body text may not.
 3. **Confidence may not be calibrated.** Both answers returned exactly `0.9`. Two samples
    prove nothing, but if the model returns 0.9 regardless, the `uncertain` path never
-   fires — and honest abstention is a differentiating feature of this product, not a
+   fires - and honest abstention is a differentiating feature of this product, not a
    nicety. Worth probing with a deliberately ambiguous frame.
 
 ### Consequence for the design
 
 Churn and the motion signal are **not** redundant, but their role is narrower than first
-assumed: they cover the cases a still frame cannot reach — the same page being read versus
-scrolled, a terminal scrolling its own output, a feed and an article on one domain — rather
+assumed: they cover the cases a still frame cannot reach - the same page being read versus
+scrolled, a terminal scrolling its own output, a feed and an article on one domain - rather
 than being the primary discriminator. The tiered escalation already reflects this. The
 claim in `ARCHITECTURE.md` has been narrowed to match.
 
-## 2026-10-29 — First real inference, via Baseten
+## 2026-10-29 - First real inference, via Baseten
 
 **Setup.** Muse Spark Open (`meta-models/muse-spark-open-1026`) served by Baseten at
 `inference.baseten.co/v1`. Placement `self_hosted`: open weights on infrastructure the
@@ -90,12 +90,12 @@ operator controls.
 
 ### Muse Spark Open reasons before it answers
 
-The first call failed with `unexpected content type: NoneType` — an error pointing at the
+The first call failed with `unexpected content type: NoneType` - an error pointing at the
 parser rather than the cause. The model spends its token budget thinking, so a tight
 `max_tokens` returns null content and `finish_reason: "length"`.
 
 This is not a tuning detail. The classifier shipped with `max_tokens=400`, which on a
-complex screen would have failed as an *uncertain span* rather than a visible error —
+complex screen would have failed as an *uncertain span* rather than a visible error -
 producing a mysteriously useless classifier instead of an obvious fault.
 
 The budget a reasoning model needs scales with input size, which a caller cannot know in
@@ -111,8 +111,8 @@ With the transport working, Tier 4 produced this:
 > For doomscrolling, the recorded time is 2h 31m (56%).
 
 Every rule satisfied, every figure cited, and completely worthless. The constraints
-written to prevent confabulation — *every number is given to you, cite the figure it rests
-on* — left restatement as the only safe move.
+written to prevent confabulation - *every number is given to you, cite the figure it rests
+on* - left restatement as the only safe move.
 
 The fix was to name the failure: restating one figure is not an observation, and an
 observation must relate figures to each other or to what one would expect. The prompt now
@@ -122,18 +122,18 @@ lists the shapes that qualify, and says that returning nothing is correct for th
 in this period"*, which is the honest answer. On a synthetic week containing a deliberately
 planted pattern it found it:
 
-> Deep work and doomscrolling trade off across days — higher doomscrolling coincides with
+> Deep work and doomscrolling trade off across days - higher doomscrolling coincides with
 > lower deep work. (Thursday doomscrolling 2h with deep work 28m ... compared to Monday
 > deep work 1h 50m)
 
-It also found the fragmentation — deep work totalling 6h 26m with a 48m average stretch —
+It also found the fragmentation - deep work totalling 6h 26m with a 48m average stretch -
 and that weekdays began with deep work while weekends began with devotion. None of those
 are restatements, and all cite figures that were computed rather than generated.
 
 **Open:** whether a real week of the user's own data yields observations this clean, and
 whether confidence calibration on Tier 2 varies at all. `probe.py` answers the second.
 
-## 2026-10-29 — Calibration, downscaling, and threshold stability
+## 2026-10-29 - Calibration, downscaling, and threshold stability
 
 Nine screenshots through the production classifier prompt on Muse Spark Open, at capture
 resolution and again reduced to `TARGET_WIDTH`. Two unambiguous full screens, three
@@ -153,8 +153,8 @@ cluttered application screens, four small UI crops with almost no context.
 | radio crop | admin 0.72 | admin 0.62 |
 | radio crop 2 | **uncertain 0.35** | **uncertain 0.20** |
 
-Five to eight distinct values, spread 0.57 to 0.72. The earlier worry — that both
-playground answers returning exactly 0.9 meant a constant — was wrong. All three bands
+Five to eight distinct values, spread 0.57 to 0.72. The earlier worry - that both
+playground answers returning exactly 0.9 meant a constant - was wrong. All three bands
 the architecture depends on are populated: clear cases clear `ACCEPT` (0.75), ambiguous
 ones land in the retry band, and genuinely contentless crops abstain.
 
@@ -171,7 +171,7 @@ Both abstentions cited the same missing evidence, unprompted:
 
 The prompt never mentions churn or input rate. The model identified the absence of
 exactly the two signals `perceive/motion.py` computes, as its reason for refusing to
-guess. That is independent support for the two-axis design — and it means supplying those
+guess. That is independent support for the two-axis design - and it means supplying those
 measurements should convert some abstentions into confident answers rather than merely
 decorating them.
 
@@ -185,13 +185,13 @@ the reduction is a privacy control that costs nothing in accuracy.
 ### Confidence drifts about 0.1 between identical runs
 
 > **Corrected 2026-10-31.** This section is wrong, and wrong in a way that mattered. The
-> 0.1 figure came from comparing a capture-resolution run against a downscaled one —
-> *different inputs* — so it never measured repeat variance at all. Measured properly, it
+> 0.1 figure came from comparing a capture-resolution run against a downscaled one -
+> *different inputs* - so it never measured repeat variance at all. Measured properly, it
 > is 0.53 on an ambiguous image and the category flips. See the entry at the end of this
 > log. The consequences drawn below happen to survive; the number does not.
 
 The four crops are smaller than `TARGET_WIDTH`, so `--downscale` left them byte-identical
-— yet the radio crop moved 0.72 to 0.62 and the second moved 0.35 to 0.20, at temperature
+- yet the radio crop moved 0.72 to 0.62 and the second moved 0.35 to 0.20, at temperature
 0. Reasoning models are not deterministic even with sampling disabled.
 
 **Consequence.** A sample sitting near a threshold will flip between runs, so the system
@@ -201,13 +201,13 @@ classifications rather than being recomputed every sample, and session confidenc
 duration-weighted mean rather than a last-value. Both damp this drift. Thresholds should
 not be tuned more finely than 0.1, because that is below the noise floor.
 
-## 2026-10-29 — First live run on a real screen
+## 2026-10-29 - First live run on a real screen
 
 Agent running with `TIER2_ENABLED=1` against Baseten, 92 seconds, classifying the
 operator's actual desktop. Nine events: four Tier 2 classifications, five Tier 1
 carry-forwards, all buffered.
 
-Region tracking was unavailable — no SAM host yet — so this ran with no churn evidence at
+Region tracking was unavailable - no SAM host yet - so this ran with no churn evidence at
 all, on single frames.
 
 ```
@@ -233,13 +233,13 @@ With evidence:
 > project
 
 This is the claim in `README.md`, met. A conventional tracker would have recorded
-`claude.exe, 92 seconds` — or at best "coding". What it actually recorded was the
+`claude.exe, 92 seconds` - or at best "coding". What it actually recorded was the
 project, the phase of work within it, and the files on screen. The distinction between
 "an editor was focused" and "validating a screen-agent before a deadline" is the entire
 product.
 
 Four independent classifications over ninety seconds produced four consistent labels at
-0.87–0.88, which also bears on the drift noted above: the variance is real but small
+0.87-0.88, which also bears on the drift noted above: the variance is real but small
 enough that a category does not flip within a stable activity.
 
 ### Notes
@@ -248,13 +248,13 @@ enough that a category does not flip within a stable activity.
   between them. The timeline has no gaps.
 - Startup previously coupled classifier and tracker construction, so an unset
   `SAM_ENDPOINT` discarded a working classifier and silently reverted the agent to
-  app-name labelling — the exact failure the product exists to correct, hidden inside the
+  app-name labelling - the exact failure the product exists to correct, hidden inside the
   product. They are now constructed independently.
 - Still open: whether churn evidence improves these labels or merely decorates them. That
   needs a SAM host, and the abstentions recorded earlier suggest it will matter most on
   the samples that currently decline to answer.
 
-## 2026-10-31 — Tier 4 against Meta's own endpoint
+## 2026-10-31 - Tier 4 against Meta's own endpoint
 
 `META_API_KEY` in place, so Tier 4 now runs on `muse-spark-1.3` at `api.meta.ai/v1` with
 `managed` placement. `check_api.py` settled the transport in one pass: `/chat/completions`
@@ -266,9 +266,9 @@ needed no change for Meta any more than it did for Baseten.
 
 If the model says deep work is fragmented, there is no way to know whether that is insight
 or noise unless the answer is already known. `review_week.py` builds a week with three
-patterns planted on purpose — a deep-work/doomscrolling trade-off across days, deep work
+patterns planted on purpose - a deep-work/doomscrolling trade-off across days, deep work
 fragmented into 8 stretches averaging 48m, and weekdays opening with deep work while
-weekends open with devotion — and takes a backend prefix, so the same input can go through
+weekends open with devotion - and takes a backend prefix, so the same input can go through
 two models.
 
 ### The "restating one figure" rule had a loophole
@@ -280,14 +280,14 @@ this shape:
 > (fitness: 1h; Saturday: fitness 1h)
 
 Which satisfies every rule in the prompt. It cites figures, it computes nothing, it
-relates two numbers rather than restating one — and it says nothing at all, because
+relates two numbers rather than restating one - and it says nothing at all, because
 fitness happened on exactly one day, so those two figures are the same fact wearing a
 comparison's clothes.
 
 The prompt now names that: *two figures that cannot differ are one figure*, with the test
 being whether they could have come out differently from each other.
 
-**Three runs after the change.** The tautologies are gone. Two runs were clean — the
+**Three runs after the change.** The tautologies are gone. Two runs were clean - the
 trade-off plus either the fragmentation or the stretch-length comparison. The third
 produced a different fault instead:
 
@@ -296,7 +296,7 @@ produced a different fault instead:
 
 Two unrelated figures bolted together. Pushing the model off tautology moved it toward
 spurious relation, which is the harder failure to catch because it reads as analysis. Net
-better — a vacuous observation wastes attention, a spurious one misleads — but not solved.
+better - a vacuous observation wastes attention, a spurious one misleads - but not solved.
 
 ### Tier 4 output varies more than Tier 2 does
 
@@ -315,19 +315,19 @@ to the model, not left for the model to notice.
 The hackathon's Fireworks session published an effort sweep on short-answer text benchmarks
 where Muse scores *worse* at high effort than at low. `perceive/classify.py` escalates
 `EFFORT_LADDER` on low confidence, assuming more effort helps. Those benchmarks are text,
-not screen classification, so this does not transfer — but it does mean the ladder is an
+not screen classification, so this does not transfer - but it does mean the ladder is an
 assumption this project has never tested, and `probe.py` can test it.
 
-## 2026-10-31 — No SAM host, a stub running in production, and churn that argues against itself
+## 2026-10-31 - No SAM host, a stub running in production, and churn that argues against itself
 
 ### SAM 3.1 is not reachable, so churn is measured locally
 
 > **Corrected 2026-10-31, later the same day.** "Not reachable" was wrong, and the
 > mistake was mine: I listed what the *Baseten* key served and never asked Meta's
-> own endpoint. `sam-3.1` is there. It is still not used, for a better reason —
+> own endpoint. `sam-3.1` is there. It is still not used, for a better reason -
 > see the entry at the end of this log. The frame differ stands on its own merits.
 
-Listing the models the Baseten key can reach returned 21, every one of them text —
+Listing the models the Baseten key can reach returned 21, every one of them text -
 DeepSeek, GLM, Kimi, Nemotron, `muse-spark-open`. No segmentation model of any kind.
 Baseten's Model APIs are text inference; SAM would need a dedicated deployment on an
 account this project administers, and there is no local GPU to serve it on instead.
@@ -338,10 +338,10 @@ grid. Only the 2,304-byte digest outlives a sample, so the single-buffer capture
 holds and nothing derived from pixels leaves the machine.
 
 Writing the tests corrected the code. `CELL_DELTA` was documented as the thing that stops
-a blinking caret counting as churn. It is not — a 2x18 caret lights its own cell
+a blinking caret counting as churn. It is not - a 2x18 caret lights its own cell
 comfortably. The protection is the *ratio*: one or two cells out of 2,304 sits three
 orders of magnitude below `STATIC`. What `CELL_DELTA` actually prevents is a global
-luminance step — a backlight change or a theme animation — reading as 100% churn on an
+luminance step - a backlight change or a theme animation - reading as 100% churn on an
 untouched screen. The test now pins that behaviour instead of the comment.
 
 ### The agent had been running a stub
@@ -349,7 +349,7 @@ untouched screen. The test now pins that behaviour instead of the comment.
 The first live run after wiring returned `shallow work | 0.50` for every sample, Tier 1
 and Tier 2 alike. The stored evidence said why in its own words:
 
-> Browser in foreground; contents unexamined. (stub classifier — not a real observation)
+> Browser in foreground; contents unexamined. (stub classifier - not a real observation)
 
 **`main.py` never loaded `.env`.** `probe.py` and `check_api.py` each carried their own
 loader, so both diagnostics saw a configured backend while the product saw nothing:
@@ -369,7 +369,7 @@ thing it reports on.
 ### The motion signal reaches the model, and sometimes argues against the frame
 
 Five Tier 2 classifications on a real desktop after the fix, confidence 0.35 to 0.88. Both
-bands populated in a *live* run for the first time — previously every live sample came
+bands populated in a *live* run for the first time - previously every live sample came
 back confident.
 
 Three of five evidence strings cite the motion measurement unprompted, so the prompt wiring
@@ -396,7 +396,7 @@ guessing.
 weakness predicted when it was written, now observed rather than asserted, and it is the
 strongest available argument for the SAM path: per-region churn would have attributed the
 movement to the region that moved and left the contracts page reading as static. The model
-even named the deficiency — *"cannot localize the movement to a specific region"* — which
+even named the deficiency - *"cannot localize the movement to a specific region"* - which
 is the caveat line the prompt supplies, used as intended.
 
 A third sample reported no measurements at all: middling churn resolves to `UNCLEAR` in
@@ -405,7 +405,7 @@ still no better off than before.
 
 **Net:** whole-screen churn is worth having and is not a substitute. It helps where it
 agrees with the frame, abstains where it conflicts, and says nothing in the middle band.
-The claim that it "converts abstentions into answers" is not supported — it also creates
+The claim that it "converts abstentions into answers" is not supported - it also creates
 them.
 
 ### Noted in passing
@@ -415,11 +415,11 @@ the documented limit of `redact.py` working as specified: it scrubs credentials,
 personal data generally. The limit is pinned by a test, and this is what it looks like in
 practice on a real screen.
 
-## 2026-10-31 — How much does an identical input move on its own?
+## 2026-10-31 - How much does an identical input move on its own?
 
 The effort sweep raised a question it could not answer. Seven images through
 `EFFORT_LADDER`, one reading per cell, reported confidence rising on two and falling on
-three, with two categories flipping — which reads like evidence that escalating reasoning
+three, with two categories flipping - which reads like evidence that escalating reasoning
 effort hurts. But the low-effort readings also disagreed with the 2026-10-29 table on the
 same images at the same effort, by far more than the 0.1 that entry claimed as the drift
 floor. Either something had changed, or the floor was wrong.
@@ -439,7 +439,7 @@ same width:
 ### Variance is not a constant; it concentrates where the system is already unsure
 
 This is the finding, and it is more useful than a drift number. The unambiguous article is
-near-deterministic — 0.06 across five runs, category never in doubt. The ambiguous feed
+near-deterministic - 0.06 across five runs, category never in doubt. The ambiguous feed
 moves 0.53 and **flips category** between `doomscrolling` and `uncertain` on identical
 pixels.
 
@@ -457,7 +457,7 @@ what moves the number.
 
 **The effort sweep proves nothing.** One reading per cell against per-cell noise of 0.53
 is coin-flipping. "Escalating made answers less confident more often than more confident"
-was not a finding, and neither were the two category flips it reported — those are inside
+was not a finding, and neither were the two category flips it reported - those are inside
 the noise on exactly the kind of image that produced them. `EFFORT_LADDER` remains
 untested. Answering it properly needs repeats per cell, and the cheap version of that
 question is whether escalation reduces *variance* rather than whether it raises the mean.
@@ -465,7 +465,7 @@ question is whether escalation reduces *variance* rather than whether it raises 
 `probe.py` now reports within-image spread separately whenever `--repeat` is above one,
 and says that across-image comparisons are only meaningful where they exceed it. The tool
 previously pooled repeats into a single spread and concluded "the signal varies, so
-thresholds are meaningful" — which is true of the across-image comparison and false of
+thresholds are meaningful" - which is true of the across-image comparison and false of
 the within-image one, from the same ten numbers.
 
 ### What this vindicates
@@ -480,14 +480,14 @@ Two decisions made for other reasons turn out to be load-bearing:
 And one consequence for the product: `ACCEPT = 0.75` is not a threshold an ambiguous
 sample sits above or below, it is a threshold such a sample *crosses repeatedly*. The
 retry in `classify_verified` is therefore partly resampling noise rather than thinking
-harder — which may be the real reason it appears to work.
+harder - which may be the real reason it appears to work.
 
 **Open:** whether the uncertain queue should require a label to abstain twice before
 asking the user. On these numbers a single abstention is weak evidence of ambiguity, and
 asking a person about a sample that would have answered itself on the next poll is the
 most expensive mistake this system can make.
 
-## 2026-10-31 — Tier 3, and what the model catalogues actually serve
+## 2026-10-31 - Tier 3, and what the model catalogues actually serve
 
 ### Ask the endpoint, not the documentation
 
@@ -515,7 +515,7 @@ into a config file.
 
 This is a better position than the one it replaces. "I could not find a host" is an
 excuse; "the host exists and the design refuses it" is the privacy claim actually costing
-something. The frame differ is no longer a fallback — it is the implementation that fits.
+something. The frame differ is no longer a fallback - it is the implementation that fits.
 
 ### The voice model is in the catalogue and on none of the obvious routes
 
@@ -535,14 +535,14 @@ end, and `transcribe()` records what was tried in its own docstring.
 ### Two bugs the live runs found, both mine
 
 **A category named after a venue.** The first taxonomy had `gym`, and `interpret` then
-refused "I went for a run" and "I was on a walk" — they had nowhere to go. A gym is a
+refused "I went for a run" and "I was on a walk" - they had nowhere to go. A gym is a
 place; the category had to be the activity. Renamed to `fitness`, including in the fixture
 and its assertions, because one concept under two names is how a timeline becomes
 unreadable.
 
 **An inference path that never fired.** The prompt asked the model to estimate a duration
 when none was stated and record it at reduced confidence. Across five phrasings it never
-estimated once — it returned 0 every time and declined. That is better behaviour than the
+estimated once - it returned 0 every time and declined. That is better behaviour than the
 design asked for, so `INFERRED_CONFIDENCE` is gone and an unstated duration is now an
 explicit refusal with something to say back. A guessed number on somebody's timeline is
 one they will plan around.
@@ -556,18 +556,18 @@ Verified against `muse-spark-1.3`:
 | "at the gym for 45 minutes, lower body" | `fitness` / lower body at the gym, 45m, 0.97 |
 | "I went for a run, about 30 minutes" | `fitness` / run, 30m, 0.97 |
 | "reviewing a paper contract for about an hour" | `admin` / reviewing a paper contract, 60m |
-| "I just got back from the gym" | refused — no duration stated |
-| "twenty minutes reading API docs in Chrome" | refused — not off-screen time |
-| "ugh whatever" | refused — nothing in the taxonomy |
+| "I just got back from the gym" | refused - no duration stated |
+| "twenty minutes reading API docs in Chrome" | refused - not off-screen time |
+| "ugh whatever" | refused - nothing in the taxonomy |
 
 The screen-work refusal is the one worth noting: that time is observed directly and does
 not need stating, and a tier that accepted it would double-count the day.
 
 **The agent never opens a microphone.** There is no capture path in the codebase, so Tier
-3 only runs when a person invokes it. That is a stronger control than a runtime check — a
+3 only runs when a person invokes it. That is a stronger control than a runtime check - a
 guard that permits background audio under conditions is one somebody eventually widens.
 
-## 2026-10-31 — First end-to-end run on real data, and the bug it found
+## 2026-10-31 - First end-to-end run on real data, and the bug it found
 
 Everything had been verified a component at a time. Nothing had travelled the whole path.
 The audit before this run:
@@ -613,7 +613,7 @@ the desktop silent.
 
 **The first fix considered was wrong.** Refusing a check-in that overlaps observed time
 sounds right and is not: if you are at the gym with the desktop left on, the agent may log
-"reading" from a static screen — the gym claim is true and the observation is the artifact.
+"reading" from a static screen - the gym claim is true and the observation is the artifact.
 Refusing would discard the better evidence.
 
 So `apply_stated_spans` is a read-time overlay beside `apply_resolutions`: within one
@@ -627,8 +627,8 @@ Real data after the fix: 9 sessions to 6, no zero-length spans, the check-in one
 ### Two things this leaves
 
 **The stated interval ends at the last check-in event, not at the claimed end time.**
-Events are instants — `docs/API.md` has no duration field — so a check-in claiming
-18:14–18:54 at a two-minute cadence yields an interval of 18:14–18:52, and up to one
+Events are instants - `docs/API.md` has no duration field - so a check-in claiming
+18:14-18:54 at a two-minute cadence yields an interval of 18:14-18:52, and up to one
 cadence of the claim goes unprotected. A short observed span survived at 18:52 for exactly
 this reason. The server could infer the cadence from the median gap in the run; it does not
 yet.
