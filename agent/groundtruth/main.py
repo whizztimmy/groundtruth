@@ -33,6 +33,8 @@ from .config import Config, load_env_file
 from .escalate import EscalationState, should_escalate
 from .sync import SyncClient
 from . import presence
+from .activity import ActivityMeter, disagreement
+from .patterns import FOCUS_CATEGORIES
 from .perceive import framediff
 from .types import Classification, Event, Observation, Tier
 
@@ -159,6 +161,12 @@ class Agent:
         self._state = EscalationState()
         self._stopping = asyncio.Event()
         self._input_history: list[bool] = []
+        self._activity = ActivityMeter()
+        """The industry activity percentage, computed alongside our own label.
+
+        Not used to decide anything. It is carried on every event so the two numbers can
+        be compared on real data instead of in a pitch deck. See activity.py.
+        """
         self._last_digest: framediff.Digest | None = None
         """Previous frame reduced to grid-cell luminances, for whole-screen churn.
 
@@ -231,6 +239,7 @@ class Agent:
         self._input_history.append(had_input)
         if len(self._input_history) > _INPUT_HISTORY:
             self._input_history.pop(0)
+        self._activity.record(had_input)
 
         obs = replace(window.foreground(), input_active=had_input)
 
@@ -324,12 +333,36 @@ class Agent:
                 ts=obs.ts,
                 device_id=self._config.device_id,
                 tier=tier,
-                classification=classification,
+                classification=self._with_activity(classification),
                 process=obs.process,
                 window_title=obs.window_title,
             )
         )
 
+
+    def _with_activity(self, classification: Classification) -> Classification:
+        """Attach the input-activity score, and name it where it contradicts the screen.
+
+        Every event carries it, at every tier, because the comparison is the product's
+        argument and an argument that only appears in the cases that flatter it is not
+        one. Most of the time the two agree and the line is just a number.
+
+        Appended to evidence rather than added to the event: `docs/API.md` is frozen, and
+        a new field would be a silent divergence from a contract three components were
+        built against.
+        """
+        level = self._activity.level()
+        note = f"Input activity {level.percent}% over the last {level.elapsed_minutes}m"
+        if level.is_partial:
+            note += " (partial segment)"
+        clash = disagreement(
+            level, classification.category, focus_categories=FOCUS_CATEGORIES
+        )
+        if clash:
+            note += f". For comparison, {clash}"
+        return replace(
+            classification, evidence=f"{classification.evidence} [{note}.]"
+        )
 
 def _carry(previous: Classification, ceiling: float = 1.0) -> Classification:
     """Re-assert a previous label for a sample that could not be classified afresh.

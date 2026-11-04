@@ -36,6 +36,36 @@ with the model naming the evidence it lacks, while unambiguous ones clear 0.88. 
 that silently invents a label for the hard 10% is a tracker whose other 90% you cannot
 trust either.
 
+## It reports the old metric too, and shows you where it is wrong
+
+Hubstaff, the Upwork desktop app and Time Doctor all measure the same thing: split the
+clock into ten-minute segments, count the minutes containing any keyboard or mouse input,
+divide. GroundTruth implements that metric faithfully in `agent/groundtruth/activity.py`
+and carries it on every event, because an argument you cannot check is worth nothing.
+
+```
+Static documentation page
+[Input activity 10% over the last 10m. For comparison, an input-activity tracker
+ would score this 10% and flag it as idle; the screen shows research.]
+```
+
+It fails in exactly two directions. Quiet work scores zero: reading, reviewing, a long
+debugging stare, all filed as idle. Loud waste scores full marks: forty minutes pulling a
+feed is continuous input and ranks among your most productive time. One keystroke in sixty
+seconds scores that minute the same as sixty seconds of typing, which is why a mouse
+jiggler defeats it completely and why people pay money for one.
+
+Most of the time the two agree, and GroundTruth says nothing. The comparison only fires in
+those two cases, because a tool that contradicted you constantly would be an accusation
+rather than a measurement.
+
+The deeper difference is who is asking. Activity tracking grew up as something an employer
+installs on a contractor's machine, so screenshots are uploaded for somebody else to look
+at and the score exists to be audited. GroundTruth answers "what did I actually do
+today?", and nobody else is the audience. That is what makes the rest of the architecture
+possible. See [why this is not another time tracker](docs/WHY.md), which is also honest
+about what those tools still do better.
+
 ## Why this is built on open weights
 
 The most sensitive data a person has is their own screen. A tracker that understands your
@@ -197,7 +227,7 @@ restriction does not exist.
 
 | Part | Contents | Tests |
 |------|----------|-------|
-| `agent/` | Capture, presence, escalation, perception, classification, buffer, sync, review | 276 |
+| `agent/` | Capture, presence, activity metering, escalation, perception, classification, sync | 296 |
 | `server/` | Event ingest, idempotent on `(device_id, ts)`, session segmentation, derivation | 144 |
 | `web/` | Dashboard: day timeline, the contrast view, the uncertain queue | — |
 | `scripts/` | Pre-commit credential scanner | 35 |

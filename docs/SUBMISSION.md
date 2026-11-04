@@ -53,6 +53,16 @@ evidence it rests on. Off-screen hours are stated by the user and recorded at th
 confidence a stated fact deserves. Once a week a reasoning model looks at the derived
 durations and reports what it notices.
 
+It also implements the metric every existing tracker uses, and reports it alongside its
+own. Hubstaff, the Upwork desktop app and Time Doctor all score a ten-minute segment by
+counting the minutes containing any input. That metric fails in two directions: quiet work
+scores zero, so reading documentation files as idle, and loud waste scores full marks, so
+forty minutes on a feed ranks among your most productive time. One keystroke in sixty
+seconds scores that minute the same as sixty seconds of typing, which is why a mouse
+jiggler defeats it and why that is a product category. GroundTruth computes the same number
+honestly and puts it next to what the screen contained, firing a comparison only in those
+two cases, because most of the time they agree.
+
 An open window is not an activity. A focused editor on a machine set never to sleep used
 to record as confident deep work whether anybody was typing in it or not. Tier 1 now asks
 two questions rather than one: is the machine attended, which only input answers, and is
@@ -89,7 +99,7 @@ transcription for check-ins is written but its endpoint could not be found, so c
 are typed; nothing mobile ships. docs/validation.md records what was tested and what it
 showed, including the results that contradicted the design.
 
-455 tests across three suites: 276 agent, 144 server, 35 for a pre-commit credential
+475 tests across three suites: 296 agent, 144 server, 35 for a pre-commit credential
 scanner.
 ```
 
