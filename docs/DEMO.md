@@ -65,6 +65,12 @@ Open the dashboard's contrast view on the fixture day.
 > twenty-eight: deep work on an auth refactor, reading API documentation, a standup
 > thread, and two hours of doomscrolling. Same application. Five different things."
 
+Then the sharper version, which `SCRIPT.md` runs as beat 1b: the activity percentage that
+Hubstaff and the Upwork timer actually measure is computed on every event here too, and
+the evidence line names where it disagrees. Reading scores 10% and files as idle;
+doomscrolling scores near 100%. It only fires on a complete ten minute segment, so take it
+from accumulated data rather than waiting for it live.
+
 Do not explain the architecture yet. Let the comparison land first.
 
 ### Beat 2 — it labels the work, not the window (0:25–1:10)

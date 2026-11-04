@@ -3,7 +3,12 @@
 Word for word, with timings. `docs/DEMO.md` is the reference; this is the thing you read
 while recording.
 
-Target **2:45–3:00**. Every number below is real and was produced by the commands shown.
+Target **3:00**, and the script deliberately holds a little more than that. If you run
+long, cut beat 6 to its final paragraph and let beat 5 run shorter. Do not cut beats 1b
+or 3: those two are what distinguish this from everything else being submitted, and they
+are the two a judge will remember.
+
+Every number below is real and was produced by the commands shown.
 If a number differs on the day, say the one on your screen — the point survives.
 
 **Two ways to narrate.** Speak it, or record silent and add the `CAPTION` lines as text.
@@ -39,7 +44,44 @@ demo rubric. If you are short on time, caption it.
 
 ---
 
-## Beat 2 — it is really doing this (0:20–1:05)
+## Beat 1b — the metric you already use (0:20–0:45)
+
+**On screen:** an evidence line showing both numbers. Either the dashboard's Uncertain
+tab, or the README section, whichever you can get to in one click.
+
+> "Here is what every tracker actually measures. Hubstaff, the Upwork timer, Time Doctor,
+> all the same thing: split the clock into ten minute blocks, count the minutes where you
+> touched a key or the mouse, divide. That is the activity percentage."
+
+> "I implemented it. It runs on every event, next to my own label."
+
+Point at the line:
+
+```
+Static documentation page
+[Input activity 10% over the last 10m. For comparison, an input-activity tracker
+ would score this 10% and flag it as idle; the screen shows research.]
+```
+
+> "Ten percent. Reading documentation for ten minutes scores as idle, because reading is
+> quiet. And forty minutes pulling a feed is constant input, so it scores near a hundred
+> and ranks as my most productive time of the day."
+
+> "One keystroke in sixty seconds scores that minute the same as sixty seconds of typing.
+> That is why a mouse jiggler beats it, and why you can buy one."
+
+`CAPTION: Every tracker measures whether your hands moved.`
+`CAPTION: Reading scores 10% and files as idle. Doomscrolling scores 95%.`
+
+**Say this too, because it is the fair version and it lands better:** most of the time the
+two numbers agree, and the comparison stays quiet. It only speaks up in those two cases.
+A tool that contradicted you constantly would be an accusation, not a measurement.
+
+**Practical note.** The comparison only fires on a complete ten minute segment, so it will
+not appear during a short live run. Use accumulated data in the dashboard, or read it off
+the README. Do not promise it live and then wait for it.
+
+## Beat 2 — it is really doing this (0:45–1:20)
 
 **On screen:** the agent terminal tab.
 
@@ -61,7 +103,7 @@ Let two or three Tier 2 lines appear. They take about twenty seconds each.
 
 ---
 
-## Beat 3 — it refuses to guess (1:05–1:40)
+## Beat 3 — it refuses to guess (1:20–1:55)
 
 **On screen:** dashboard, Uncertain tab.
 
@@ -86,7 +128,7 @@ This is the strongest thirty seconds in the demo. Do not rush it.
 
 ---
 
-## Beat 4 — the privacy claim is executable (1:40–2:00)
+## Beat 4 — the privacy claim is executable (1:55–2:15)
 
 **On screen:** a terminal. Run the one-liner from `DEMO.md` beat 4.
 
@@ -102,7 +144,7 @@ Let the traceback land.
 
 ---
 
-## Beat 5 — the hours a screen cannot see (2:00–2:25)
+## Beat 5 — the hours a screen cannot see (2:15–2:35)
 
 **On screen:** terminal.
 
@@ -128,7 +170,7 @@ python -m groundtruth.checkin --text "I just got back from the gym"
 
 ---
 
-## Beat 6 — what is not built (2:25–3:00)
+## Beat 6 — what is not built (2:35–3:05)
 
 **On screen:** the README, or just your face.
 
