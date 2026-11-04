@@ -30,7 +30,7 @@ cd agent && ./.venv/Scripts/python.exe -m pytest tests/ -q
 cd agent && ./.venv/Scripts/python.exe check_api.py
 ```
 
-The first prints `250 passed`. The second confirms both endpoints answer before you are
+The first prints `276 passed`. The second confirms both endpoints answer before you are
 live — do not skip it, because a cold Baseten deployment can take its time on the first
 call and you do not want to discover that on camera.
 

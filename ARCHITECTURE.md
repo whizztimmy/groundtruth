@@ -163,6 +163,7 @@ What is held, and for how long:
 | Frame digest (64x36 mean luminances) | In memory, one sample, overwritten | Never |
 | Derived region features (churn, persistence) | Discarded after classification | Never |
 | Activity label + confidence + timestamps | Persisted, credential-scrubbed | Only on explicit sync |
+| Seconds since last input | In memory, one sample | Never (only its effect on confidence) |
 | Check-in audio | In memory for one call, never written | **Yes** — to a managed transcription endpoint |
 
 No frame is ever written to disk. This is enforced at the capture boundary rather than by

@@ -53,6 +53,15 @@ evidence it rests on. Off-screen hours are stated by the user and recorded at th
 confidence a stated fact deserves. Once a week a reasoning model looks at the derived
 durations and reports what it notices.
 
+An open window is not an activity. A focused editor on a machine set never to sleep used
+to record as confident deep work whether anybody was typing in it or not. Tier 1 now asks
+two questions rather than one: is the machine attended, which only input answers, and is
+anything happening on screen, which churn answers locally and for free. Neither alone is
+enough, because reading has no input and a video has no typing, but the pair rules out the
+case that matters: focused, nothing typed, nothing moving, for minutes. That is recorded
+as unattended rather than as work, and in between the two the confidence decays toward the
+retry threshold instead of holding at 0.9, which hands the sample to Tier 2 to settle.
+
 The privacy boundary is enforced in code, not promised. Classification runs on Muse Spark
 Open, on infrastructure the operator controls, and sending a frame to a vendor-managed
 endpoint raises PlacementViolation rather than succeeding. A backend with no declared
@@ -80,7 +89,7 @@ transcription for check-ins is written but its endpoint could not be found, so c
 are typed; nothing mobile ships. docs/validation.md records what was tested and what it
 showed, including the results that contradicted the design.
 
-429 tests across three suites: 250 agent, 144 server, 35 for a pre-commit credential
+455 tests across three suites: 276 agent, 144 server, 35 for a pre-commit credential
 scanner.
 ```
 

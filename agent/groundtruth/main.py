@@ -32,6 +32,7 @@ from .perceive.regions import RegionTracker
 from .config import Config, load_env_file
 from .escalate import EscalationState, should_escalate
 from .sync import SyncClient
+from . import presence
 from .perceive import framediff
 from .types import Classification, Event, Observation, Tier
 
@@ -55,6 +56,31 @@ IDLE = Classification(
 Treating it as a real classification rather than a gap keeps the segmenter simple: it
 closes a session on category change, and idle is just another category.
 """
+
+
+def _unattended(obs: Observation, idle_s: float) -> Classification:
+    """An application is focused and nothing is being done with it.
+
+    Distinct from idle, which claims the person is away. This makes the narrower claim
+    that *this activity* is not happening: nothing typed, nothing moving on screen, while
+    a window still holds focus. The two can be told apart and conflating them is what a
+    five-minute idle timeout does.
+
+    Confidence 0.9 rather than idle's 1.0. Both halves are measurements, so the claim is
+    strong, but it is read off two signals rather than asserted by the OS.
+
+    The process is kept in the evidence because "which app was sitting open doing
+    nothing" is a question people actually want answered.
+    """
+    return Classification(
+        label="open, not in use",
+        category="unattended",
+        confidence=0.9,
+        evidence=(
+            f"{obs.process or 'a window'} in foreground; no input for {int(idle_s)}s "
+            "and the screen is static."
+        ),
+    )
 
 
 class SupportsClassify(Protocol):
@@ -207,17 +233,45 @@ class Agent:
             self._input_history.pop(0)
 
         obs = replace(window.foreground(), input_active=had_input)
+
+        # Grabbed once per tick rather than only when escalating, because tier 1 needs
+        # the motion signal too: a focused editor with a static screen and no input is
+        # the case this whole gate exists for, and tier 1 is what labels it. Costs a
+        # screenshot and a 2,304-cell diff, no inference and no network. Only the digest
+        # outlives the sample, never the frame. See framediff.py.
+        frame = self._grab_frame() if self._grab_frame else None
+        churn: float | None = None
+        if frame is not None:
+            current = framediff.digest(frame)
+            if self._last_digest is not None:
+                churn = framediff.churn_of(self._last_digest, current)
+                obs = replace(obs, screen_churn=churn)
+                log.debug("screen churn %.3f", churn)
+            self._last_digest = current
+
+        attention = presence.assess(idle_s, churn)
+
         decision = should_escalate(obs, self._state)
         log.debug("tier1 %s -> %s (%s)", obs.process, decision.escalate, decision.reason)
 
         if not decision.escalate:
+            if not attention.credits_activity:
+                # An application is focused and nothing is being done with it. Recording
+                # the window name here is what used to manufacture five minutes of
+                # confident "deep work" out of an editor somebody walked away from.
+                del frame
+                await self._emit(obs, _unattended(obs, idle_s), Tier.WINDOW)
+                return
+
             # Tier 1 resolved it. Emitting here is what makes the cheap tier actually
             # cover a day rather than leave gaps wherever the model was not consulted.
             resolved = known.lookup(obs.process)
             if resolved is None:
                 carried = self._last.get((obs.process or "").lower())
                 if carried is not None:
-                    await self._emit(obs, _carry(carried), Tier.WINDOW)
+                    await self._emit(
+                        obs, _carry(carried, attention.confidence), Tier.WINDOW
+                    )
                     return
                 # No Tier 1 label and nothing to carry: the very first samples of an
                 # unrecognised process while Tier 2 is rate limited. A gap is the honest
@@ -231,27 +285,15 @@ class Agent:
                 Classification(
                     label=label,
                     category=category,
-                    confidence=0.9,
-                    evidence=f"{obs.process} in foreground; its name describes the activity.",
+                    confidence=attention.confidence,
+                    evidence=(
+                        f"{obs.process} in foreground; its name describes the activity. "
+                        f"{presence.evidence(attention, idle_s)}."
+                    ),
                 ),
                 Tier.WINDOW,
             )
             return
-
-        frame = self._grab_frame() if self._grab_frame else None
-
-        if frame is not None:
-            # Whole-screen churn, computed locally. Measured even when a tracker is
-            # present, because it costs microseconds and `_motion_for` prefers per-region
-            # churn anyway; this only reaches the prompt when regions are absent.
-            #
-            # Only the digest outlives the sample, never the frame. See framediff.py.
-            current = framediff.digest(frame)
-            if self._last_digest is not None:
-                measured = framediff.churn_of(self._last_digest, current)
-                obs = replace(obs, screen_churn=measured)
-                log.debug("screen churn %.3f", measured)
-            self._last_digest = current
 
         if frame is not None and self._tracker is not None:
             try:
@@ -289,12 +331,18 @@ class Agent:
         )
 
 
-def _carry(previous: Classification) -> Classification:
+def _carry(previous: Classification, ceiling: float = 1.0) -> Classification:
     """Re-assert a previous label for a sample that could not be classified afresh.
 
-    Confidence is deliberately not reduced. The label is as good as it was a few seconds
-    ago, and decaying it would make the dashboard show attention quietly draining away
-    during exactly the stretches where someone was most focused.
+    Confidence is not reduced by the passage of time. The label is as good as it was a
+    few seconds ago, and decaying it on a clock would make the dashboard show attention
+    quietly draining away during exactly the stretches where someone was most focused.
+
+    It is capped by `ceiling`, which is a different thing: what the presence evidence
+    supports right now. A carried label cannot be more confident than the fact that
+    somebody is there, and without that cap this path quietly reinstated the bug the
+    presence gate exists to fix. Most labels come through here rather than from the
+    process table, so capping only the table would have fixed almost nothing.
 
     The evidence string says it was carried, so a user asking "why did it say that?"
     gets an honest answer rather than the impression of a fresh observation.
@@ -302,7 +350,7 @@ def _carry(previous: Classification) -> Classification:
     return Classification(
         label=previous.label,
         category=previous.category,
-        confidence=previous.confidence,
+        confidence=min(previous.confidence, ceiling),
         evidence=f"{previous.evidence} (carried forward; no new classification due)",
         reasoning_effort=previous.reasoning_effort,
     )

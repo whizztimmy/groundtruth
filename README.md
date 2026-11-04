@@ -72,7 +72,7 @@ GroundTruth only climbs when the rung below is genuinely ambiguous.
 
 | Tier | Signal | Cost | Fires when | Status |
 |------|--------|------|-----------|--------|
-| 1 | Foreground window + process name | Free | Always | **Running** |
+| 1 | Foreground window, process name, and whether anybody is actually there | Free | Always | **Running** |
 | 2 | Screen frame + local motion signal, classified by **Muse Spark Open** | Rented GPU | Tier 1 is ambiguous (e.g. a browser) | **Running** |
 | 3 | Check-in you state yourself, interpreted by **Muse Spark** | Remote, rare | Off-screen time — the gym, a commute, a walk | **Running** (typed; audio transcription unverified) |
 | 4 | Weekly synthesis via **Muse Spark** on the Meta Model API | Remote, weekly | On request | **Running** |
@@ -82,6 +82,40 @@ unambiguous majority for free, which is what makes always-on operation affordabl
 escalation policy decides the rest — rate limit, then ambiguous process, then unusable
 title, then unrecognised process, then a low-confidence streak, then periodic
 re-verification.
+
+### An open window is not an activity
+
+The first version of Tier 1 answered "what is focused?" and stopped. A focused editor
+became `deep work` at 0.9 confidence whether somebody was typing in it or had gone to
+lunch, because the input signal was measured on every sample and then not consulted when
+the label was written. On a machine set never to sleep, that manufactured up to five
+minutes of confident work per idle stretch.
+
+Shortening the idle timeout does not fix it. Input idleness alone cannot tell "away from
+the machine" from "reading", and a tracker that files twenty minutes of reading
+documentation as idle is wrong in a way you notice immediately.
+
+So `presence.py` asks two questions instead of one. **Is the machine attended?** Only
+input answers that. **Is anything happening on screen?** Churn answers that, locally and
+for free. Neither alone is enough, and the pair rules out exactly the case that was being
+mislabelled: focused, nothing typed, nothing moving, for minutes.
+
+| Input | Screen | Recorded as |
+|---|---|---|
+| recent | either | the activity, full confidence |
+| none | changing | the activity, reduced confidence (a video, a build, a feed) |
+| none | static, briefly | the activity, decaying confidence (reading looks like this) |
+| none | static, sustained | **`unattended`** rather than the activity |
+
+Where the pair cannot settle it, the claim weakens rather than changes. Tier 1 confidence
+decays toward the retry threshold as time since input grows, which does real work
+downstream: below `ACCEPT` the escalation policy sends the sample to Tier 2 to be looked
+at properly, and session confidence is duration-weighted so a long unattended stretch
+pulls the session down instead of riding on one good sample.
+
+And when no frame is captured at all, which is the normal case with Tier 2 disabled,
+`unattended` is never claimed. Input alone cannot separate somebody reading from an empty
+chair, so the system declines to say.
 
 ### Attention as motion, not as window focus
 
@@ -163,7 +197,7 @@ restriction does not exist.
 
 | Part | Contents | Tests |
 |------|----------|-------|
-| `agent/` | Capture, escalation, perception, classification, buffer, sync, weekly review | 250 |
+| `agent/` | Capture, presence, escalation, perception, classification, buffer, sync, review | 276 |
 | `server/` | Event ingest, idempotent on `(device_id, ts)`, session segmentation, derivation | 144 |
 | `web/` | Dashboard: day timeline, the contrast view, the uncertain queue | — |
 | `scripts/` | Pre-commit credential scanner | 35 |
